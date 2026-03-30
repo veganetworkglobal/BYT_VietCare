@@ -1,0 +1,877 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BYT-VIETCARE · Platform Strategy & Architecture</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700;900&family=Be+Vietnam+Pro:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+/* ═══════════════════════════════════════
+   ROOT VARIABLES
+═══════════════════════════════════════ */
+:root{
+  --green:#00C896; --g:#00C896;
+  --green-dark:#009B74; --g2:#00A87C;
+  --g3:rgba(0,200,150,.12);
+  --cyan:#00E5FF; --cy:#00E5FF;
+  --gold:#FFB830;
+  --red:#FF4757;
+  --violet:#9D7FFF;
+  --navy:#050D1A;
+  --deep:#080F20;
+  --panel:rgba(255,255,255,.04);
+  --border:rgba(0,200,150,.18);
+  --border2:rgba(255,255,255,.07);
+  --text:#E8F0EE;
+  --muted:rgba(255,255,255,.45);
+  --white:#ffffff;
+}
+
+/* ═══════════════════════════════════════
+   RESET & BASE
+═══════════════════════════════════════ */
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{font-family:'Be Vietnam Pro',sans-serif;background:var(--navy);color:var(--text);overflow-x:hidden;cursor:none}
+::-webkit-scrollbar{width:5px}
+::-webkit-scrollbar-track{background:var(--deep)}
+::-webkit-scrollbar-thumb{background:var(--g2);border-radius:5px}
+
+/* ═══════════════════════════════════════
+   CURSOR
+═══════════════════════════════════════ */
+#cursor{position:fixed;width:12px;height:12px;background:var(--green);border-radius:50%;pointer-events:none;z-index:9999;transform:translate(-50%,-50%);transition:transform .1s,opacity .2s;mix-blend-mode:screen}
+#cursor-ring{position:fixed;width:36px;height:36px;border:1px solid rgba(0,200,150,.5);border-radius:50%;pointer-events:none;z-index:9998;transform:translate(-50%,-50%);transition:transform .18s ease,width .2s,height .2s,border-color .2s}
+
+/* ═══════════════════════════════════════
+   CANVAS
+═══════════════════════════════════════ */
+#canvas{position:fixed;inset:0;z-index:0;opacity:.45;pointer-events:none}
+
+/* ═══════════════════════════════════════
+   NAVIGATION
+═══════════════════════════════════════ */
+nav{
+  position:fixed;top:0;left:0;right:0;z-index:200;
+  padding:14px 48px;display:flex;align-items:center;justify-content:space-between;
+  background:rgba(5,13,26,.78);backdrop-filter:blur(24px);
+  border-bottom:1px solid var(--border);transition:all .3s;
+}
+.nav-logo{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:900;color:var(--white);letter-spacing:1px;display:flex;align-items:center;gap:10px;text-decoration:none}
+.nav-logo .dot{width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 12px var(--green);animation:blink 2s infinite;flex-shrink:0}
+@keyframes blink{0%,100%{opacity:1;box-shadow:0 0 12px var(--green)}50%{opacity:.3;box-shadow:0 0 4px var(--green)}}
+.nav-links{display:flex;gap:28px;flex-wrap:wrap}
+.nav-links a{font-size:11px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);text-decoration:none;transition:color .2s;white-space:nowrap}
+.nav-links a:hover,.nav-links a.active{color:var(--green)}
+.nav-cta{padding:9px 22px;border-radius:100px;background:linear-gradient(135deg,var(--green-dark),var(--green));color:#fff;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;border:none;cursor:none;box-shadow:0 0 20px rgba(0,200,150,.3);transition:box-shadow .3s,transform .2s;white-space:nowrap}
+.nav-cta:hover{box-shadow:0 0 40px rgba(0,200,150,.6);transform:translateY(-1px)}
+
+/* ═══════════════════════════════════════
+   HERO
+═══════════════════════════════════════ */
+.hero{position:relative;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:120px 40px 80px;z-index:1;overflow:hidden}
+.hero-mesh{position:absolute;inset:0;background:radial-gradient(ellipse 70% 60% at 20% 30%,rgba(0,200,150,.12) 0%,transparent 60%),radial-gradient(ellipse 50% 70% at 80% 70%,rgba(0,229,255,.07) 0%,transparent 55%),radial-gradient(ellipse 60% 40% at 50% 100%,rgba(0,155,116,.15) 0%,transparent 50%)}
+.orb{position:absolute;border-radius:50%;filter:blur(80px);pointer-events:none;animation:float 8s ease-in-out infinite}
+.orb1{width:400px;height:400px;background:rgba(0,200,150,.08);top:-100px;left:-150px;animation-delay:0s}
+.orb2{width:300px;height:300px;background:rgba(0,229,255,.06);top:20%;right:-100px;animation-delay:-3s}
+.orb3{width:350px;height:350px;background:rgba(0,155,116,.1);bottom:-80px;left:30%;animation-delay:-5s}
+@keyframes float{0%,100%{transform:translate(0,0) scale(1)}33%{transform:translate(20px,-30px) scale(1.05)}66%{transform:translate(-15px,20px) scale(.97)}}
+
+.hero-eyebrow{position:relative;display:inline-flex;align-items:center;gap:10px;border:1px solid rgba(0,200,150,.35);padding:8px 22px;border-radius:100px;font-size:11px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:var(--green);margin-bottom:32px;animation:fadeUp .8s ease both;background:rgba(0,200,150,.06);backdrop-filter:blur(10px)}
+.hero-eyebrow::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green);animation:blink 1.5s infinite}
+.hero-brand{position:relative;font-family:'Cormorant Garamond',serif;font-size:clamp(52px,9vw,120px);font-weight:900;line-height:.95;color:var(--white);letter-spacing:-2px;animation:fadeUp .9s .1s ease both}
+.hero-brand .accent{color:transparent;-webkit-text-stroke:1.5px var(--green);text-shadow:0 0 40px rgba(0,200,150,.3)}
+.hero-brand .glow-word{color:var(--green);text-shadow:0 0 60px rgba(0,200,150,.5)}
+.hero-tagline-big{position:relative;font-family:'Cormorant Garamond',serif;font-size:clamp(18px,2.5vw,26px);font-weight:600;color:var(--green);letter-spacing:.5px;margin-bottom:16px;animation:fadeUp 1s .2s ease both}
+.hero-slogan{position:relative;font-size:clamp(14px,1.8vw,18px);font-weight:400;color:rgba(255,255,255,.6);max-width:620px;margin:0 auto 50px;line-height:1.7;animation:fadeUp 1s .25s ease both}
+.hero-coins{position:relative;display:flex;gap:20px;flex-wrap:wrap;justify-content:center;margin-bottom:50px;animation:fadeUp 1s .35s ease both}
+.hcoin{text-align:center;padding:18px 28px;background:var(--panel);border:1px solid var(--border);border-radius:16px;backdrop-filter:blur(20px);transition:transform .3s,border-color .3s,box-shadow .3s}
+.hcoin:hover{transform:translateY(-6px) scale(1.03);border-color:var(--green);box-shadow:0 20px 50px rgba(0,200,150,.15)}
+.hcoin-num{font-family:'JetBrains Mono',monospace;font-size:36px;font-weight:700;color:var(--green);text-shadow:0 0 20px rgba(0,200,150,.4);display:block}
+.hcoin-label{font-size:10px;letter-spacing:1.5px;color:var(--muted);text-transform:uppercase;margin-top:4px}
+.hero-btns{position:relative;display:flex;gap:16px;flex-wrap:wrap;justify-content:center;animation:fadeUp 1s .45s ease both}
+.btn-primary{padding:15px 38px;border-radius:100px;background:linear-gradient(135deg,var(--green-dark),var(--green));color:#fff;font-weight:700;font-size:13px;letter-spacing:1px;text-transform:uppercase;border:none;cursor:none;box-shadow:0 0 30px rgba(0,200,150,.35);transition:all .3s}
+.btn-primary:hover{box-shadow:0 0 60px rgba(0,200,150,.6);transform:translateY(-3px)}
+.btn-outline{padding:15px 38px;border-radius:100px;background:transparent;border:1px solid rgba(0,200,150,.45);color:var(--green);font-weight:700;font-size:13px;letter-spacing:1px;text-transform:uppercase;cursor:none;transition:all .3s;backdrop-filter:blur(10px)}
+.btn-outline:hover{background:rgba(0,200,150,.1);border-color:var(--green)}
+.scroll-hint{position:absolute;bottom:36px;left:50%;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:8px;animation:fadeUp 1s .6s ease both}
+.scroll-line{width:1px;height:50px;background:linear-gradient(to bottom,transparent,var(--green));animation:scrollLine 1.8s ease-in-out infinite}
+@keyframes scrollLine{0%{transform:scaleY(0);transform-origin:top}50%{transform:scaleY(1);transform-origin:top}51%{transform:scaleY(1);transform-origin:bottom}100%{transform:scaleY(0);transform-origin:bottom}}
+.scroll-text{font-size:9px;letter-spacing:3px;color:var(--muted);text-transform:uppercase}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:translateY(0)}}
+
+/* ═══════════════════════════════════════
+   SECTIONS
+═══════════════════════════════════════ */
+.section{position:relative;z-index:1;padding:90px 60px;max-width:1400px;margin:0 auto}
+.section-full{position:relative;z-index:1;padding:90px 0}
+.section-divider{height:1px;background:linear-gradient(90deg,transparent,var(--border),transparent);margin:0 60px}
+.section-label{display:inline-flex;align-items:center;gap:10px;font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--green);margin-bottom:14px}
+.section-label::before{content:'';width:20px;height:1.5px;background:var(--green)}
+h2.sec-title{font-family:'Cormorant Garamond',serif;font-size:clamp(28px,4vw,50px);font-weight:700;color:var(--white);line-height:1.1;margin-bottom:16px}
+h2.sec-title em{color:var(--green);font-style:normal}
+.sec-lead{font-size:16px;color:var(--muted);max-width:640px;line-height:1.8;margin-bottom:55px}
+
+/* ═══════════════════════════════════════
+   TERM BAND
+═══════════════════════════════════════ */
+.term-band{background:linear-gradient(135deg,rgba(0,200,150,.07),rgba(0,229,255,.03));border:1px solid var(--border);border-radius:24px;padding:48px 56px;margin:0 60px 70px;position:relative;overflow:hidden;z-index:1}
+.term-band::before{content:'';position:absolute;top:-80px;right:-80px;width:280px;height:280px;border-radius:50%;background:radial-gradient(circle,rgba(0,200,150,.1) 0%,transparent 70%)}
+.term-title{font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;letter-spacing:3px;color:var(--green);text-transform:uppercase;margin-bottom:18px}
+.term-name{font-family:'Cormorant Garamond',serif;font-size:clamp(30px,5vw,58px);font-weight:900;color:var(--white);line-height:1;margin-bottom:16px}
+.term-name span{color:var(--green);text-shadow:0 0 40px rgba(0,200,150,.4)}
+.term-desc{font-size:15px;color:var(--muted);max-width:680px;line-height:1.85}
+.term-desc strong{color:var(--text)}
+
+/* ═══════════════════════════════════════
+   VN INSIGHT
+═══════════════════════════════════════ */
+.vn-insight{margin:0 60px 70px;border:1px solid var(--border);background:linear-gradient(135deg,rgba(0,200,150,.06),rgba(0,229,255,.03));border-radius:20px;padding:40px 48px;position:relative;overflow:hidden;z-index:1}
+.vn-insight::before{content:'🇻🇳';position:absolute;right:28px;top:16px;font-size:90px;opacity:.06;pointer-events:none}
+.vi-label{font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;letter-spacing:3px;color:var(--green);text-transform:uppercase;margin-bottom:14px}
+.vn-insight p{font-size:14.5px;color:rgba(255,255,255,.7);line-height:1.85;max-width:800px}
+.vn-insight p strong{color:var(--green)}
+
+/* ═══════════════════════════════════════
+   FEATURE CARDS (Stakeholder sections)
+═══════════════════════════════════════ */
+.stk-header{display:flex;align-items:flex-start;gap:22px;padding:36px;border-radius:20px;margin-bottom:44px}
+.sh-customer{background:linear-gradient(135deg,rgba(0,200,150,.06),rgba(0,200,150,.03));border-left:4px solid var(--green)}
+.sh-center{background:linear-gradient(135deg,rgba(255,184,48,.06),rgba(255,184,48,.03));border-left:4px solid var(--gold)}
+.sh-freelance{background:linear-gradient(135deg,rgba(157,127,255,.06),rgba(157,127,255,.03));border-left:4px solid var(--violet)}
+.sh-platform{background:linear-gradient(135deg,rgba(255,71,87,.06),rgba(255,71,87,.03));border-left:4px solid var(--red)}
+.sh-badge{font-size:48px;flex-shrink:0}
+.sh-info h2{font-size:clamp(22px,3vw,32px);margin-bottom:6px}
+.sh-info .sh-sub{font-size:13px;color:var(--muted);font-style:italic;margin-bottom:10px}
+.sh-tags{display:flex;flex-wrap:wrap;gap:7px}
+.sh-tag{padding:3px 11px;border-radius:100px;font-size:10px;font-weight:600;background:rgba(255,255,255,.06);color:rgba(255,255,255,.6);border:1px solid var(--border2)}
+
+.feature-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:22px}
+.fcard{background:var(--panel);border:1px solid var(--border2);border-radius:20px;overflow:hidden;transition:all .4s;position:relative;backdrop-filter:blur(12px);transform-style:preserve-3d}
+.fcard::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(0,200,150,.4),transparent);opacity:0;transition:opacity .3s}
+.fcard:hover{border-color:rgba(0,200,150,.25);box-shadow:0 20px 60px rgba(0,0,0,.4),inset 0 1px 0 rgba(255,255,255,.04);transform:translateY(-6px) rotateX(2deg)}
+.fcard:hover::before{opacity:1}
+.fcard-hdr{padding:20px 22px 0;display:flex;align-items:flex-start;gap:13px}
+.fcard-icon{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+.ic-g{background:linear-gradient(135deg,rgba(0,155,116,.3),rgba(0,200,150,.5));box-shadow:0 4px 15px rgba(0,200,150,.2)}
+.ic-b{background:linear-gradient(135deg,rgba(0,140,200,.3),rgba(0,229,255,.5));box-shadow:0 4px 15px rgba(0,229,255,.15)}
+.ic-o{background:linear-gradient(135deg,rgba(200,130,0,.3),rgba(255,184,48,.5));box-shadow:0 4px 15px rgba(255,184,48,.15)}
+.ic-r{background:linear-gradient(135deg,rgba(200,40,70,.3),rgba(255,71,87,.5));box-shadow:0 4px 15px rgba(255,71,87,.15)}
+.ic-p{background:linear-gradient(135deg,rgba(100,80,200,.3),rgba(160,130,255,.5));box-shadow:0 4px 15px rgba(160,130,255,.15)}
+.ic-t{background:linear-gradient(135deg,rgba(0,180,120,.3),rgba(0,229,150,.5));box-shadow:0 4px 15px rgba(0,229,150,.15)}
+.fcard-ttl{font-size:14px;font-weight:700;color:var(--white);margin-bottom:2px}
+.fcard-sub{font-size:11px;color:var(--muted)}
+.fcard-body{padding:14px 22px 22px}
+.flist{list-style:none}
+.flist li{display:flex;align-items:flex-start;gap:9px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.04);font-size:12.5px;color:rgba(255,255,255,.68);line-height:1.5}
+.flist li:last-child{border-bottom:none}
+.flist li::before{content:'▸';color:var(--green);flex-shrink:0;margin-top:1px;font-size:10px}
+.flist li strong{color:var(--text);font-weight:600}
+.ai-chip{display:inline-flex;align-items:center;background:linear-gradient(135deg,rgba(100,80,200,.5),rgba(0,200,150,.4));color:#fff;font-size:8px;font-weight:700;padding:2px 6px;border-radius:100px;letter-spacing:.8px;text-transform:uppercase;margin-left:4px;vertical-align:middle}
+.hot-chip{background:linear-gradient(135deg,rgba(200,40,40,.5),rgba(255,71,87,.4));color:#fff;font-size:8px;font-weight:700;display:inline-flex;padding:2px 6px;border-radius:4px;margin-left:4px;letter-spacing:.5px;text-transform:uppercase;vertical-align:middle}
+
+/* ═══════════════════════════════════════
+   REVENUE
+═══════════════════════════════════════ */
+.rev-bg{position:relative;background:linear-gradient(180deg,transparent,rgba(0,200,150,.03),transparent);z-index:1;padding:90px 0}
+.rev-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;max-width:1280px;margin:0 auto;padding:0 60px}
+.rev-card{padding:30px 26px;border-radius:20px;background:var(--panel);border:1px solid var(--border2);position:relative;overflow:hidden;backdrop-filter:blur(12px);transition:all .4s;transform-style:preserve-3d}
+.rev-card:hover{transform:translateY(-8px) rotateX(3deg) rotateY(-1deg);border-color:rgba(0,200,150,.3);box-shadow:0 30px 70px rgba(0,0,0,.5)}
+.rev-line{position:absolute;top:0;left:0;right:0;height:3px;border-radius:3px 3px 0 0}
+.rl1{background:linear-gradient(90deg,#00C896,#00E5FF)}
+.rl2{background:linear-gradient(90deg,#FFB830,#FF8C00)}
+.rl3{background:linear-gradient(90deg,#9D7FFF,#6C63FF)}
+.rl4{background:linear-gradient(90deg,#FF4757,#FF6B81)}
+.rl5{background:linear-gradient(90deg,#00C896,#009B74)}
+.rl6{background:linear-gradient(90deg,#00E5FF,#0099BB)}
+.rev-icon{font-size:30px;margin-bottom:14px}
+.rev-card h4{font-size:15px;font-weight:700;color:var(--white);margin-bottom:7px}
+.rev-card p{font-size:12px;color:var(--muted);line-height:1.6;margin-bottom:14px}
+.rev-val{font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;color:var(--green);border-top:1px solid rgba(255,255,255,.06);padding-top:11px}
+
+/* ═══════════════════════════════════════
+   MEDIA CHANNELS
+═══════════════════════════════════════ */
+.channels-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px}
+.ch-card{padding:26px 22px;border-radius:18px;background:var(--panel);border:1px solid var(--border2);display:flex;flex-direction:column;align-items:flex-start;gap:10px;transition:all .35s;position:relative;overflow:hidden;backdrop-filter:blur(10px)}
+.ch-card:hover{transform:translateY(-5px);border-color:var(--border)}
+.ch-icon{font-size:30px}
+.ch-name{font-size:14px;font-weight:700;color:var(--white)}
+.ch-desc{font-size:11px;color:var(--muted);line-height:1.5}
+.ch-badge{font-size:9px;font-weight:700;letter-spacing:1px;padding:3px 9px;border-radius:100px;text-transform:uppercase}
+.cb-free{background:rgba(0,200,150,.12);color:var(--green);border:1px solid rgba(0,200,150,.22)}
+.cb-paid{background:rgba(255,184,48,.1);color:var(--gold);border:1px solid rgba(255,184,48,.18)}
+.cb-live{background:rgba(255,71,87,.1);color:#FF6B81;border:1px solid rgba(255,71,87,.18)}
+
+/* ═══════════════════════════════════════
+   AI ARCHITECTURE
+═══════════════════════════════════════ */
+.ai-layers{display:grid;grid-template-columns:repeat(3,1fr);gap:22px;margin-top:50px}
+.ai-layer{border-radius:20px;overflow:hidden;border:1px solid var(--border2);background:var(--panel);backdrop-filter:blur(12px);transition:all .35s}
+.ai-layer:hover{border-color:rgba(0,200,150,.2);transform:translateY(-4px)}
+.ai-layer-top{padding:22px 24px 16px;background:linear-gradient(135deg,rgba(0,200,150,.08),rgba(0,229,255,.04));border-bottom:1px solid rgba(255,255,255,.05)}
+.ai-num{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--green);letter-spacing:2px;margin-bottom:8px}
+.ai-layer h3{font-size:17px;font-weight:700;color:var(--white);margin-bottom:3px;font-family:'Cormorant Garamond',serif}
+.ai-layer-sub{font-size:11px;color:var(--muted)}
+.ai-list{padding:16px 24px 22px;list-style:none}
+.ai-list li{font-size:12.5px;color:rgba(255,255,255,.6);padding:7px 0;border-bottom:1px solid rgba(255,255,255,.04);display:flex;gap:9px;line-height:1.4}
+.ai-list li:last-child{border-bottom:none}
+.ai-list li::before{content:'◆';color:var(--cyan);font-size:7px;margin-top:4px;flex-shrink:0}
+
+/* ═══════════════════════════════════════
+   ROADMAP
+═══════════════════════════════════════ */
+.phases{display:grid;grid-template-columns:repeat(3,1fr);gap:22px;margin-top:50px}
+.phase{background:var(--panel);border:1px solid var(--border2);border-radius:20px;padding:34px 28px;position:relative;overflow:hidden;backdrop-filter:blur(12px);transition:all .35s}
+.phase:hover{transform:translateY(-5px);border-color:rgba(0,200,150,.2)}
+.phase-glow{position:absolute;top:-60px;right:-60px;width:200px;height:200px;border-radius:50%;opacity:.08;filter:blur(50px)}
+.ph1 .phase-glow{background:var(--green)}.ph2 .phase-glow{background:var(--cyan)}.ph3 .phase-glow{background:#9D7FFF}
+.phase-num{font-family:'Cormorant Garamond',serif;font-size:80px;font-weight:900;position:absolute;top:-10px;right:18px;opacity:.07;color:var(--white);line-height:1;pointer-events:none}
+.ph1 .phase-num{color:var(--green);opacity:.14}.ph2 .phase-num{color:var(--cyan);opacity:.11}.ph3 .phase-num{color:#9D7FFF;opacity:.11}
+.phase-badge{display:inline-flex;align-items:center;font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:700;letter-spacing:2px;padding:5px 12px;border-radius:100px;text-transform:uppercase;margin-bottom:14px}
+.ph1 .phase-badge{background:rgba(0,200,150,.1);color:var(--green);border:1px solid rgba(0,200,150,.22)}
+.ph2 .phase-badge{background:rgba(0,229,255,.08);color:var(--cyan);border:1px solid rgba(0,229,255,.18)}
+.ph3 .phase-badge{background:rgba(157,127,255,.08);color:#B8A5FF;border:1px solid rgba(157,127,255,.18)}
+.phase h3{font-size:19px;font-weight:700;color:var(--white);margin-bottom:16px;font-family:'Cormorant Garamond',serif}
+.phase-items{list-style:none}
+.phase-items li{padding:7px 0;font-size:12.5px;color:rgba(255,255,255,.58);border-bottom:1px dashed rgba(255,255,255,.05);display:flex;align-items:flex-start;gap:7px}
+.phase-items li:last-child{border:none}
+.ph1 .phase-items li::before{content:'→';color:var(--green)}.ph2 .phase-items li::before{content:'→';color:var(--cyan)}.ph3 .phase-items li::before{content:'→';color:#B8A5FF}
+
+/* ═══════════════════════════════════════
+   PRODUCTS
+═══════════════════════════════════════ */
+.products-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(278px,1fr));gap:22px}
+.pcard{border-radius:24px;padding:32px 28px;position:relative;overflow:hidden;border:1px solid var(--border2);background:var(--panel);backdrop-filter:blur(14px);transition:all .4s;transform-style:preserve-3d}
+.pcard:hover{transform:translateY(-8px) rotateX(2deg);border-color:rgba(0,200,150,.22);box-shadow:0 30px 80px rgba(0,0,0,.5)}
+.pcard-corner{position:absolute;top:0;right:0;width:100px;height:100px;background:radial-gradient(circle at top right,rgba(0,200,150,.08),transparent)}
+.pcard-icon{font-size:38px;margin-bottom:18px;display:block}
+.pcard h3{font-size:19px;font-weight:700;color:var(--white);margin-bottom:5px;font-family:'Cormorant Garamond',serif}
+.pcard-price{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--green);margin-bottom:12px;font-weight:700}
+.pcard p{font-size:12.5px;color:var(--muted);line-height:1.7;margin-bottom:14px}
+.pcard-tags{display:flex;flex-wrap:wrap;gap:6px}
+.ptag{font-size:9.5px;padding:3px 9px;border-radius:100px;border:1px solid var(--border2);color:var(--muted)}
+
+/* ═══════════════════════════════════════
+   VISION STATEMENT
+═══════════════════════════════════════ */
+.vision-stmt{text-align:center;padding:90px 60px;position:relative;z-index:1;background:linear-gradient(180deg,transparent,rgba(0,200,150,.03),transparent)}
+.vs-quote{font-family:'Cormorant Garamond',serif;font-size:clamp(20px,3.5vw,44px);font-weight:700;color:var(--white);max-width:860px;margin:0 auto 28px;line-height:1.25}
+.vs-quote em{color:var(--green);font-style:normal}
+.vs-sub{font-size:14px;color:var(--muted);max-width:500px;margin:0 auto;line-height:1.7}
+
+/* ═══════════════════════════════════════
+   COMPONENTS SECTION WRAPPER
+═══════════════════════════════════════ */
+#components-section{position:relative;z-index:1;padding:90px 0 0}
+.comp-section-hdr{text-align:center;padding:0 48px 0;margin-bottom:10px;position:relative;background:radial-gradient(ellipse 80% 50% at 50% 0%,rgba(0,200,150,.06) 0%,transparent 60%)}
+.comp-section-hdr h2{font-family:'Cormorant Garamond',serif;font-size:clamp(30px,4vw,52px);font-weight:900;color:var(--white);margin-bottom:10px}
+.comp-section-hdr h2 em{color:var(--green);font-style:normal}
+.comp-section-hdr p{font-size:15px;color:var(--muted);max-width:560px;margin:0 auto 36px;line-height:1.8}
+
+/* Filter bar */
+.filter-bar{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;padding:0 48px 44px}
+.ftab{padding:8px 20px;border-radius:100px;font-size:10px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;cursor:pointer;border:1px solid var(--border2);background:transparent;color:var(--muted);transition:all .25s;font-family:'JetBrains Mono',monospace}
+.ftab:hover{border-color:var(--border);color:var(--green)}
+.ftab.active{background:rgba(0,200,150,.1);border-color:rgba(0,200,150,.4);color:var(--green)}
+.ftab[data-color="gold"].active{background:rgba(255,184,48,.08);border-color:rgba(255,184,48,.3);color:var(--gold)}
+.ftab[data-color="violet"].active{background:rgba(157,127,255,.08);border-color:rgba(157,127,255,.3);color:var(--violet)}
+.ftab[data-color="red"].active{background:rgba(255,71,87,.08);border-color:rgba(255,71,87,.25);color:var(--red)}
+.ftab[data-color="cy"].active{background:rgba(0,229,255,.06);border-color:rgba(0,229,255,.25);color:var(--cyan)}
+
+/* comp count badge */
+.comp-count-badge{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--green);background:rgba(0,200,150,.1);border:1px solid rgba(0,200,150,.2);padding:5px 14px;border-radius:100px;display:inline-block;margin-bottom:30px}
+
+/* Component grid */
+.comp-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(255px,1fr));gap:16px;padding:0 48px 80px;transition:all .3s}
+.comp-card{background:var(--panel);border:1px solid var(--border2);border-radius:18px;padding:24px 22px;cursor:pointer;transition:all .35s;position:relative;overflow:hidden;backdrop-filter:blur(10px)}
+@keyframes fadeCard{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+.comp-card{animation:fadeCard .5s ease both}
+.comp-card::before{content:'';position:absolute;inset:0;border-radius:18px;background:radial-gradient(circle at 70% 20%,var(--card-glow,rgba(0,200,150,.06)),transparent 60%);opacity:0;transition:opacity .3s}
+.comp-card:hover{transform:translateY(-5px);border-color:rgba(0,200,150,.25);box-shadow:0 16px 50px rgba(0,0,0,.4),0 0 0 1px rgba(0,200,150,.07)}
+.comp-card:hover::before{opacity:1}
+.comp-card.active-card{border-color:var(--green);box-shadow:0 0 0 2px rgba(0,200,150,.2),0 16px 50px rgba(0,0,0,.5)}
+.comp-card.hidden{display:none}
+.card-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:13px}
+.card-icon-wrap{width:46px;height:46px;border-radius:13px;display:flex;align-items:center;justify-content:center;font-size:21px;flex-shrink:0}
+.cat-tag{font-family:'JetBrains Mono',monospace;font-size:8px;font-weight:700;padding:3px 8px;border-radius:100px;letter-spacing:1px;text-transform:uppercase}
+.comp-name{font-size:14px;font-weight:700;color:#fff;margin-bottom:4px;line-height:1.3}
+.comp-tagline{font-size:11px;color:var(--muted);line-height:1.5;margin-bottom:14px}
+.comp-pills{display:flex;flex-wrap:wrap;gap:5px}
+.pill{font-size:9px;padding:2px 8px;border-radius:100px;border:1px solid var(--border2);color:var(--muted)}
+.card-arrow{position:absolute;bottom:18px;right:18px;width:28px;height:28px;border-radius:50%;background:rgba(0,200,150,.1);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:12px;color:var(--green);transition:all .25s}
+.comp-card:hover .card-arrow{background:var(--green);color:#fff;transform:translateX(3px)}
+
+/* ═══════════════════════════════════════
+   DETAIL PANEL
+═══════════════════════════════════════ */
+#panel-overlay{position:fixed;inset:0;background:rgba(3,8,16,.65);backdrop-filter:blur(5px);z-index:400;opacity:0;pointer-events:none;transition:opacity .35s}
+#panel-overlay.show{opacity:1;pointer-events:all}
+#detail-panel{position:fixed;top:0;right:0;bottom:0;width:min(580px,100vw);background:linear-gradient(160deg,#0A1628,#071020);border-left:1px solid var(--border);z-index:401;transform:translateX(100%);transition:transform .45s cubic-bezier(.22,1,.36,1);overflow-y:auto;display:flex;flex-direction:column}
+#detail-panel.open{transform:translateX(0)}
+#detail-panel::-webkit-scrollbar{width:3px}
+#detail-panel::-webkit-scrollbar-thumb{background:var(--g2)}
+.panel-close{position:sticky;top:0;z-index:10;display:flex;align-items:center;justify-content:space-between;padding:16px 26px;background:rgba(7,16,32,.92);backdrop-filter:blur(20px);border-bottom:1px solid var(--border2)}
+.panel-close-btn{width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,.06);border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;color:var(--muted);transition:all .2s}
+.panel-close-btn:hover{background:rgba(255,71,87,.15);border-color:rgba(255,71,87,.3);color:var(--red)}
+.panel-breadcrumb{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:1.5px}
+.panel-hero{padding:30px 26px 0}
+.panel-icon-big{font-size:52px;margin-bottom:14px;display:block;line-height:1}
+.panel-cat-row{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.panel-cat{font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:700;padding:4px 11px;border-radius:100px;letter-spacing:1.5px;text-transform:uppercase}
+.panel-status{font-size:10px;color:var(--green);font-weight:600;display:flex;align-items:center;gap:5px}
+.panel-status::before{content:'●';animation:blink 2s infinite;font-size:8px}
+.panel-name{font-family:'Cormorant Garamond',serif;font-size:clamp(24px,4vw,34px);font-weight:900;color:#fff;line-height:1.1;margin-bottom:9px}
+.panel-tagline{font-size:13px;color:var(--muted);line-height:1.7;margin-bottom:22px;font-style:italic}
+.panel-desc{background:rgba(0,200,150,.05);border:1px solid rgba(0,200,150,.12);border-radius:14px;padding:18px 20px;margin:0 26px 26px;font-size:13px;color:rgba(255,255,255,.7);line-height:1.85}
+.ps{padding:0 26px;margin-bottom:26px}
+.ps-title{font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:var(--green);margin-bottom:13px;display:flex;align-items:center;gap:8px}
+.ps-title::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,rgba(0,200,150,.2),transparent)}
+.fn-list{list-style:none;display:flex;flex-direction:column;gap:9px}
+.fn-item{display:flex;align-items:flex-start;gap:13px;padding:13px 15px;background:var(--panel);border:1px solid var(--border2);border-radius:12px;transition:all .25s}
+.fn-item:hover{border-color:var(--border);background:rgba(0,200,150,.04)}
+.fn-num{font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;color:var(--green);background:rgba(0,200,150,.1);border:1px solid rgba(0,200,150,.2);width:26px;height:26px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.fn-body strong{display:block;font-size:13px;font-weight:700;color:#fff;margin-bottom:2px}
+.fn-body span{font-size:12px;color:var(--muted);line-height:1.5}
+.ai-tag{display:inline-flex;background:linear-gradient(135deg,rgba(157,127,255,.4),rgba(0,200,150,.3));color:#fff;font-size:8px;font-weight:700;padding:2px 6px;border-radius:4px;margin-left:4px;letter-spacing:.5px;vertical-align:middle}
+.feat-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.feat-item{padding:9px 13px;background:var(--panel);border:1px solid var(--border2);border-radius:10px;font-size:11.5px;color:rgba(255,255,255,.68);display:flex;align-items:flex-start;gap:7px;transition:border-color .2s}
+.feat-item:hover{border-color:var(--border)}
+.feat-item::before{content:'◆';color:var(--green);font-size:7px;margin-top:3px;flex-shrink:0}
+.roles-row{display:flex;flex-wrap:wrap;gap:7px}
+.role-chip{display:flex;align-items:center;gap:6px;padding:6px 13px;border-radius:100px;border:1px solid var(--border2);background:var(--panel);font-size:12px;color:rgba(255,255,255,.68)}
+.role-chip .rdot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.tech-row{display:flex;flex-wrap:wrap;gap:7px}
+.tech-badge{font-family:'JetBrains Mono',monospace;font-size:10px;padding:4px 10px;border-radius:6px;border:1px solid var(--border2);color:var(--muted);background:rgba(255,255,255,.02)}
+.kpi-row{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}
+.kpi-box{text-align:center;padding:14px 8px;background:var(--panel);border:1px solid var(--border2);border-radius:12px}
+.kpi-val{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:700;color:var(--green);display:block;line-height:1}
+.kpi-lbl{font-size:10px;color:var(--muted);margin-top:3px;line-height:1.3}
+.panel-bottom{padding:22px 26px;border-top:1px solid var(--border2);margin-top:auto}
+.pb-note{font-size:12px;color:var(--muted);line-height:1.6;background:rgba(255,255,255,.02);border-radius:10px;padding:13px 15px;border:1px dashed rgba(255,255,255,.07)}
+/* keyboard nav hint */
+.panel-kbd{display:flex;align-items:center;gap:8px;justify-content:center;margin-top:12px}
+.kbd{font-family:'JetBrains Mono',monospace;font-size:9px;padding:2px 8px;border:1px solid var(--border2);border-radius:4px;color:var(--muted)}
+
+/* ═══════════════════════════════════════
+   FOOTER
+═══════════════════════════════════════ */
+footer{position:relative;z-index:1;text-align:center;padding:70px 40px;border-top:1px solid var(--border);background:linear-gradient(to bottom,transparent,rgba(0,200,150,.03))}
+.footer-logo{font-family:'Cormorant Garamond',serif;font-size:40px;font-weight:900;color:var(--white);margin-bottom:9px}
+.footer-logo span{color:var(--green);text-shadow:0 0 30px rgba(0,200,150,.5)}
+.footer-slogan{font-size:12px;color:var(--muted);letter-spacing:2.5px;text-transform:uppercase;margin-bottom:24px}
+.footer-mesh{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--border);border-radius:100px;padding:7px 18px;font-size:11px;color:var(--green);font-family:'JetBrains Mono',monospace;margin-bottom:24px}
+.footer-note{font-size:11px;color:rgba(255,255,255,.18);letter-spacing:1px}
+
+/* ═══════════════════════════════════════
+   REVEAL ANIMATION
+═══════════════════════════════════════ */
+.reveal{opacity:0;transform:translateY(36px);transition:opacity .7s ease,transform .7s ease}
+.reveal.visible{opacity:1;transform:translateY(0)}
+.reveal-delay-1{transition-delay:.1s}.reveal-delay-2{transition-delay:.2s}.reveal-delay-3{transition-delay:.3s}
+
+/* ═══════════════════════════════════════
+   RESPONSIVE
+═══════════════════════════════════════ */
+@media(max-width:900px){
+  nav{padding:12px 18px}.nav-links{display:none}
+  .section{padding:60px 20px}.section-full{padding:60px 0}
+  .section-divider,.term-band,.vn-insight{margin-left:18px;margin-right:18px}
+  .term-band{padding:28px 24px}.vn-insight{padding:28px 24px}
+  .feature-grid,.rev-grid,.ai-layers,.phases,.products-grid,.channels-grid{grid-template-columns:1fr}
+  .comp-grid,.filter-bar{padding-left:18px;padding-right:18px}
+  #detail-panel{width:100vw}
+  .feat-grid{grid-template-columns:1fr}
+  .roadmap,.ai-arch{padding-left:20px;padding-right:20px}
+}
+</style>
+</head>
+<body>
+
+<div id="cursor"></div>
+<div id="cursor-ring"></div>
+<canvas id="canvas"></canvas>
+
+<!-- ══════════════ NAV ══════════════ -->
+<nav id="navbar">
+  <a href="#top" class="nav-logo"><div class="dot"></div>BYT-VIETCARE</a>
+  <div class="nav-links">
+    <a href="#stakeholders">Stakeholders</a>
+    <a href="#ai-section">AI & Revenue</a>
+    <a href="#sanpham">Sản Phẩm</a>
+    <a href="#components-section">Architecture</a>
+    <a href="#roadmap">Lộ Trình</a>
+  </div>
+  <button class="nav-cta">Xem Demo</button>
+</nav>
+
+<!-- ══════════════ HERO ══════════════ -->
+<section class="hero" id="top">
+  <div class="hero-mesh"></div>
+  <div class="orb orb1"></div><div class="orb orb2"></div><div class="orb orb3"></div>
+
+  <div class="hero-eyebrow">Platform Strategy Blueprint · 2025–2027</div>
+  <h1 class="hero-brand">BYT-<span class="glow-word">VIET</span><span class="accent">CARE</span></h1>
+  <div class="hero-tagline-big">"Phục Hồi Toàn Diện — Kết Nối Vô Hạn — Sống Trọn Vẹn"</div>
+  <p class="hero-slogan">Nền tảng <strong style="color:var(--text)">CARE MESH™</strong> đầu tiên của Việt Nam — mô hình kết nối đa chiều chăm sóc sức khỏe vật lý trị liệu, phủ rộng từng trung tâm, từng chuyên gia, từng gia đình Việt.</p>
+
+  <div class="hero-coins">
+    <div class="hcoin"><span class="hcoin-num counter" data-target="4">0</span><span class="hcoin-label">Nhóm Người Dùng</span></div>
+    <div class="hcoin"><span class="hcoin-num counter" data-target="16">0</span><span class="hcoin-label">Platform Components</span></div>
+    <div class="hcoin"><span class="hcoin-num counter" data-target="6">0</span><span class="hcoin-label">Luồng Doanh Thu</span></div>
+    <div class="hcoin"><span class="hcoin-num counter" data-target="97">0</span><span class="hcoin-label">Triệu Dân Tiềm Năng</span></div>
+  </div>
+
+  <div class="hero-btns">
+    <button class="btn-primary" onclick="document.getElementById('components-section').scrollIntoView({behavior:'smooth'})">Khám Phá Architecture</button>
+    <button class="btn-outline" onclick="document.getElementById('stakeholders').scrollIntoView({behavior:'smooth'})">Xem Chiến Lược</button>
+  </div>
+  <div class="scroll-hint"><div class="scroll-line"></div><div class="scroll-text">Cuộn để khám phá</div></div>
+</section>
+
+<!-- ══════════════ TERM BAND ══════════════ -->
+<div class="term-band reveal">
+  <div class="term-title">◆ Thuật Ngữ Độc Quyền · BYT-VietCare Coinage</div>
+  <div class="term-name">CARE <span>MESH™</span></div>
+  <p class="term-desc"><strong>CARE MESH™ (Mạng Lưới Chăm Sóc Phân Tán)</strong> — mô hình nền tảng độc quyền, trong đó mỗi trung tâm, mỗi chuyên gia và mỗi khách hàng là một <strong>nút mạng</strong> trong hệ lưới chăm sóc toàn quốc. Không ai bị bỏ lại — không điểm nào bị gián đoạn. Như sợi lưới sinh học: <strong>càng nhiều kết nối, cả hệ thống càng mạnh hơn.</strong></p>
+</div>
+
+<div class="vn-insight reveal">
+  <div class="vi-label">🇻🇳 Insight Thị Trường Việt Nam</div>
+  <p><strong>97 triệu dân</strong>, tốc độ già hóa top 10 châu Á. Hậu COVID tạo ra nhu cầu phục hồi sức khỏe chưa từng thấy. Người Việt <strong>tin tưởng qua cộng đồng</strong>, dùng Zalo + TikTok + YouTube là kênh chính — và đặc biệt: họ không chỉ muốn tiết kiệm tiền mà còn muốn <strong>kiếm thêm từ hệ sinh thái họ đang dùng</strong>. Thị trường đang chờ <strong>người định nghĩa luật chơi</strong>.</p>
+</div>
+
+<div class="section-divider"></div>
+
+<!-- ══════════════ STAKEHOLDERS ══════════════ -->
+<div id="stakeholders">
+
+<!-- S1: KHÁCH HÀNG -->
+<section class="section">
+  <div class="stk-header sh-customer reveal">
+    <div class="sh-badge">👤</div>
+    <div class="sh-info">
+      <div class="section-label">Stakeholder 01</div>
+      <h2 class="sec-title">Tính Năng cho <em>Khách Hàng</em></h2>
+      <div class="sh-sub">Trải nghiệm chăm sóc sức khỏe liền mạch, cá nhân hóa và minh bạch nhất Việt Nam</div>
+      <div class="sh-tags"><span class="sh-tag">Bệnh nhân</span><span class="sh-tag">Người quan tâm sức khỏe</span><span class="sh-tag">Affiliate member</span></div>
+    </div>
+  </div>
+  <div class="feature-grid">
+    <div class="fcard reveal reveal-delay-1"><div class="fcard-hdr"><div class="fcard-icon ic-g">🔍</div><div><div class="fcard-ttl">Khám Phá & Tìm Kiếm Thông Minh</div><div class="fcard-sub">AI matching theo triệu chứng + vị trí</div></div></div><div class="fcard-body"><ul class="flist"><li><strong>Tìm theo triệu chứng</strong><span class="ai-chip">AI</span> — Nhập "đau lưng ngồi làm việc" → AI gợi dịch vụ phù hợp nhất</li><li><strong>Bản đồ GPS dịch vụ gần nhất</strong> — Lọc loại dịch vụ, đánh giá, giờ mở cửa, giá</li><li><strong>So sánh trung tâm side-by-side</strong> — Thiết bị, chứng chỉ, review thực tế</li><li><strong>Lọc chuyên gia theo chuyên môn</strong> — Cột sống, thể thao, hậu phẫu, YHCT kết hợp</li></ul></div></div>
+    <div class="fcard reveal reveal-delay-2"><div class="fcard-hdr"><div class="fcard-icon ic-b">📅</div><div><div class="fcard-ttl">Đặt Lịch & Quản Lý Hẹn</div><div class="fcard-sub">Booking không ma sát, mọi lúc mọi nơi</div></div></div><div class="fcard-body"><ul class="flist"><li><strong>Book nhân viên/chuyên gia cụ thể</strong> — Chọn đúng người, đúng giờ, đặt cọc online</li><li><strong>Lịch định kỳ tự động</strong> — Nhắc nhở qua Zalo/SMS/Push trước 24h và 1h</li><li><strong>Hồ sơ sức khỏe & lịch sử điều trị</strong> — Theo dõi tiến trình phục hồi cá nhân</li><li><strong>Telehealth online</strong><span class="ai-chip">AI</span> — Video call chuyên gia hoặc AI tư vấn 24/7</li></ul></div></div>
+    <div class="fcard reveal reveal-delay-3"><div class="fcard-hdr"><div class="fcard-icon ic-o">🛒</div><div><div class="fcard-ttl">Mua Sắm & Affiliate Thu Nhập</div><div class="fcard-sub">2 kênh mua hàng + thu nhập thụ động</div></div></div><div class="fcard-body"><ul class="flist"><li><strong>Shop trung tâm — đặt hàng trực tiếp</strong> — Thiết bị phục hồi, dầu massage, sản phẩm</li><li><strong>Thành viên Affiliate FOHOWAY</strong><span class="hot-chip">HOT</span> — Mua ưu đãi + hưởng thu nhập theo chính sách</li><li><strong>Dashboard thu nhập cá nhân</strong> — Hoa hồng, doanh số, cấp bậc real-time</li><li><strong>Mở rộng đa công ty đối tác</strong><span class="ai-chip">AI</span> — AI gợi ý sản phẩm theo hồ sơ sức khỏe</li></ul></div></div>
+    <div class="fcard reveal reveal-delay-1"><div class="fcard-hdr"><div class="fcard-icon ic-g">💬</div><div><div class="fcard-ttl">Tư Vấn & Hỗ Trợ 24/7</div><div class="fcard-sub">AI + Con người, không bao giờ offline</div></div></div><div class="fcard-body"><ul class="flist"><li><strong>AI Chatbot sức khỏe 24/7</strong><span class="ai-chip">AI</span> — Hỏi triệu chứng, nhận hướng dẫn, gợi ý bài tập</li><li><strong>Chat trực tiếp kỹ thuật viên</strong> — Sau buổi điều trị vẫn được hỏi thêm</li><li><strong>Cảnh báo sức khỏe cá nhân hóa</strong> — Nhắc vận động, uống nước theo hồ sơ</li><li><strong>Đa kênh hợp nhất</strong> — App + Zalo + Web = 1 lịch sử hội thoại</li></ul></div></div>
+    <div class="fcard reveal reveal-delay-2"><div class="fcard-hdr"><div class="fcard-icon ic-p">🏆</div><div><div class="fcard-ttl">Loyalty & Cộng Đồng</div><div class="fcard-sub">Gamification + chia sẻ kiến thức</div></div></div><div class="fcard-body"><ul class="flist"><li><strong>KinePoints — điểm thưởng tích lũy</strong> — Mỗi lần dùng dịch vụ, review, giới thiệu bạn</li><li><strong>Diễn đàn & chia sẻ kinh nghiệm</strong> — Cộng đồng hỏi đáp chuyên gia, case thực tế</li><li><strong>Thư viện bài tập cá nhân hóa</strong><span class="ai-chip">AI</span> — Video AI tạo dựa trên hồ sơ điều trị</li><li><strong>Review xác thực minh bạch</strong> — Chỉ khách thực tế mới được đánh giá</li></ul></div></div>
+    <div class="fcard reveal reveal-delay-3"><div class="fcard-hdr"><div class="fcard-icon ic-t">💳</div><div><div class="fcard-ttl">Thanh Toán & CareWallet</div><div class="fcard-sub">Linh hoạt, an toàn, không rào cản</div></div></div><div class="fcard-body"><ul class="flist"><li><strong>Đa hình thức thanh toán</strong> — MoMo, ZaloPay, VNPay, ngân hàng, tiền mặt</li><li><strong>Gói combo & subscription</strong> — 10 buổi giảm 20%, gói tháng tự gia hạn</li><li><strong>CareWallet — ví nội bộ</strong> — Hoàn tiền huỷ lịch, nạp trước ưu đãi, tích điểm</li><li><strong>Tích hợp bảo hiểm sức khỏe</strong> — Yêu cầu bồi thường qua app (roadmap)</li></ul></div></div>
+  </div>
+</section>
+
+<div class="section-divider"></div>
+
+<!-- S2: TRUNG TÂM -->
+<section class="section">
+  <div class="stk-header sh-center reveal">
+    <div class="sh-badge">🏥</div>
+    <div class="sh-info">
+      <div class="section-label">Stakeholder 02</div>
+      <h2 class="sec-title">Tính Năng cho <em>Trung Tâm</em></h2>
+      <div class="sh-sub">Số hóa toàn bộ vận hành — tăng doanh thu, giảm chi phí, mở rộng tệp khách hàng</div>
+      <div class="sh-tags"><span class="sh-tag">Trung tâm VLTL</span><span class="sh-tag">Phòng khám</span><span class="sh-tag">Spa y tế</span><span class="sh-tag">Wellness center</span></div>
+    </div>
+  </div>
+  <div class="feature-grid">
+    <div class="fcard reveal reveal-delay-1"><div class="fcard-hdr"><div class="fcard-icon ic-o">📊</div><div><div class="fcard-ttl">Dashboard Vận Hành AI</div><div class="fcard-sub">Quản lý toàn bộ từ một màn hình</div></div></div><div class="fcard-body"><ul class="flist"><li><strong>Quản lý lịch hẹn tập trung</strong> — Calendar theo nhân viên/phòng, drag & drop tối ưu</li><li><strong>Báo cáo doanh thu real-time</strong><span class="ai-chip">AI</span> — Phân tích theo dịch vụ, nhân viên, nhóm khách</li><li><strong>Tỷ lệ lấp đầy & tối ưu công suất</strong><span class="ai-chip">AI</span> — Gợi ý mở thêm giờ, cân bằng nhân sự</li><li><strong>Quản lý kho & vật tư</strong> — Cảnh báo hết hàng, đặt hàng tự động</li></ul></div></div>
+    <div class="fcard reveal reveal-delay-2"><div class="fcard-hdr"><div class="fcard-icon ic-b">👥</div><div><div class="fcard-ttl">HR & Quản Lý Nhân Sự</div><div class="fcard-sub">Chấm công, lương, đào tạo — tự động</div></div></div><div class="fcard-body"><ul class="flist"><li><strong>Hồ sơ kỹ thuật viên số hóa</strong> — Chứng chỉ, chuyên môn, rating, lịch sử</li><li><strong>Chấm công & tính lương tự động</strong> — Check-in qua app, lương ca + hoa hồng + KPI</li><li><strong>Quản lý ca làm việc</strong> — Shift management, thay ca linh hoạt</li><li><strong>Đào tạo nội bộ</strong><span class="ai-chip">AI</span> — Quiz, video training, chứng chỉ nội bộ</li></ul></div></div>
+    <div class="fcard reveal reveal-delay-3"><div class="fcard-hdr"><div class="fcard-icon ic-g">📋</div><div><div class="fcard-ttl">Hồ Sơ Bệnh Nhân & EMR</div><div class="fcard-sub">Hồ sơ điện tử nhẹ cho VLTL</div></div></div><div class="fcard-body"><ul class="flist"><li><strong>EMR điện tử tích hợp booking</strong> — Tiền sử, chẩn đoán, phác đồ, ghi chú sau buổi</li><li><strong>Theo dõi tiến trình phục hồi</strong><span class="ai-chip">AI</span> — Biểu đồ, AI phát hiện bất thường</li><li><strong>Ảnh/video trước và sau</strong> — Tài liệu hóa kết quả, marketing nội dung</li><li><strong>Gửi bài tập tại nhà cho bệnh nhân</strong> — Theo dõi tuân thủ, nhắc tái khám</li></ul></div></div>
+    <div class="fcard reveal reveal-delay-1"><div class="fcard-hdr"><div class="fcard-icon ic-t">📣</div><div><div class="fcard-ttl">Marketing & Tăng Trưởng</div><div class="fcard-sub">Marketing built-in, zero agency fee</div></div></div><div class="fcard-body"><ul class="flist"><li><strong>Profile trung tâm chuyên nghiệp</strong> — Landing page trong app: ảnh, video, giá, review</li><li><strong>Flash sale & voucher tích hợp</strong> — Tạo campaign, hiển thị trên app ngay lập tức</li><li><strong>CRM & chăm sóc khách hàng cũ</strong> — Zalo/SMS tự động, phân khúc, giữ chân</li><li><strong>Phân tích thị trường</strong><span class="ai-chip">AI</span> — So sánh giá đối thủ, xu hướng khu vực</li></ul></div></div>
+    <div class="fcard reveal reveal-delay-2"><div class="fcard-hdr"><div class="fcard-icon ic-p">🔗</div><div><div class="fcard-ttl">Tích Hợp Affiliate & Sản Phẩm</div><div class="fcard-sub">Thêm nguồn doanh thu từ hệ sinh thái</div></div></div><div class="fcard-body"><ul class="flist"><li><strong>Shop FOHOWAY tích hợp tại quầy</strong> — Bán sản phẩm, khách order qua app, hưởng hoa hồng</li><li><strong>Network giới thiệu trung tâm</strong> — Giới thiệu sang đối tác khi đủ tải, nhận phí</li><li><strong>Tích hợp thiết bị IoT</strong> — TENS, siêu âm → tự ghi thông số vào EMR</li><li><strong>B2B marketplace sản phẩm</strong> — Đặt hàng nhập thiết bị, giá ưu đãi</li></ul></div></div>
+    <div class="fcard reveal reveal-delay-3"><div class="fcard-hdr"><div class="fcard-icon ic-r">⚙️</div><div><div class="fcard-ttl">Vận Hành & Compliance</div><div class="fcard-sub">Tuân thủ pháp lý, minh bạch chất lượng</div></div></div><div class="fcard-body"><ul class="flist"><li><strong>Quản lý chứng chỉ & giấy phép</strong> — Nhắc gia hạn chứng chỉ nhân viên, thiết bị</li><li><strong>KPI & kiểm soát chất lượng</strong> — NPS, tỷ lệ quay lại, alert khi xuống chuẩn</li><li><strong>Xuất báo cáo thuế & kế toán</strong> — Hóa đơn điện tử, Excel/PDF cho kế toán</li><li><strong>Multi-branch management</strong> — Quản lý nhiều chi nhánh từ 1 tài khoản</li></ul></div></div>
+  </div>
+</section>
+
+<div class="section-divider"></div>
+
+<!-- S3: CÁ NHÂN KD -->
+<section class="section">
+  <div class="stk-header sh-freelance reveal">
+    <div class="sh-badge">💼</div>
+    <div class="sh-info">
+      <div class="section-label">Stakeholder 03</div>
+      <h2 class="sec-title">Tính Năng cho <em>Cá Nhân Kinh Doanh</em></h2>
+      <div class="sh-sub">Kỹ thuật viên tự do, chuyên viên hành nghề độc lập — "văn phòng số" toàn diện</div>
+      <div class="sh-tags"><span class="sh-tag">Kỹ thuật viên VLTL</span><span class="sh-tag">Freelance therapist</span><span class="sh-tag">Health coach</span><span class="sh-tag">Affiliate member</span></div>
+    </div>
+  </div>
+  <div class="feature-grid">
+    <div class="fcard reveal reveal-delay-1"><div class="fcard-hdr"><div class="fcard-icon ic-p">🪪</div><div><div class="fcard-ttl">Thương Hiệu Cá Nhân Số</div><div class="fcard-sub">Profile xác thực trong hệ sinh thái</div></div></div><div class="fcard-body"><ul class="flist"><li><strong>Profile chuyên gia được xác thực</strong> — Ảnh, video, chuyên môn, chứng chỉ, giá dịch vụ</li><li><strong>Portfolio case study điều trị</strong> — Case ẩn danh, bài viết chuyên môn, video kỹ thuật</li><li><strong>Review có xác thực thực tế</strong> — Chỉ khách đã dùng dịch vụ mới được đánh giá</li><li><strong>Badge "BYT-VietCare Certified"</strong><span class="hot-chip">NEW</span> — Tăng uy tín, phân biệt với thị trường tự do</li></ul></div></div>
+    <div class="fcard reveal reveal-delay-2"><div class="fcard-hdr"><div class="fcard-icon ic-g">💰</div><div><div class="fcard-ttl">Thu Nhập Đa Luồng</div><div class="fcard-sub">Vận hành độc lập như doanh nghiệp nhỏ</div></div></div><div class="fcard-body"><ul class="flist"><li><strong>Tự nhận booking cá nhân</strong> — Set giờ rảnh, giá, phạm vi — khách book trực tiếp</li><li><strong>Nhận việc từ nhiều trung tâm</strong> — Part-time đa điểm, lịch tập trung 1 app</li><li><strong>Dashboard thu nhập tổng hợp</strong> — Dịch vụ + affiliate + nội dung = 1 màn hình</li><li><strong>Thanh toán thẳng vào ví/tài khoản</strong> — Không qua trung gian, nhận tiền tức thì</li></ul></div></div>
+    <div class="fcard reveal reveal-delay-3"><div class="fcard-hdr"><div class="fcard-icon ic-t">📚</div><div><div class="fcard-ttl">Học Tập & Phát Triển</div><div class="fcard-sub">Nâng cấp bản thân liên tục</div></div></div><div class="fcard-body"><ul class="flist"><li><strong>Khóa học online trong platform</strong> — Trường đối tác, chứng chỉ được platform công nhận</li><li><strong>Mentoring network</strong> — Kết nối chuyên gia cao cấp, peer learning</li><li><strong>AI hỗ trợ lập phác đồ</strong><span class="ai-chip">AI</span> — Nhập triệu chứng → AI đề xuất protocol</li><li><strong>Cộng đồng chuyên gia nội bộ</strong> — Hỏi đáp chuyên môn, chia sẻ case khó</li></ul></div></div>
+  </div>
+</section>
+
+<div class="section-divider"></div>
+
+<!-- S4: PLATFORM -->
+<section class="section">
+  <div class="stk-header sh-platform reveal">
+    <div class="sh-badge">🎛️</div>
+    <div class="sh-info">
+      <div class="section-label">Stakeholder 04</div>
+      <h2 class="sec-title">Tổng Platform — <em>Trung Tâm Thần Kinh</em></h2>
+      <div class="sh-sub">Điều phối toàn hệ sinh thái: quản lý, nhượng quyền, đào tạo, tăng trưởng toàn quốc</div>
+      <div class="sh-tags"><span class="sh-tag">Super Admin</span><span class="sh-tag">Analytics toàn hệ</span><span class="sh-tag">Franchise HQ</span></div>
+    </div>
+  </div>
+  <div class="feature-grid">
+    <div class="fcard reveal reveal-delay-1"><div class="fcard-hdr"><div class="fcard-icon ic-r">🧩</div><div><div class="fcard-ttl">Super Admin & Điều Phối Toàn Hệ</div><div class="fcard-sub">Nhìn thấy mọi thứ, kiểm soát mọi thứ</div></div></div><div class="fcard-body"><ul class="flist"><li><strong>Dashboard toàn hệ real-time</strong><span class="ai-chip">AI</span> — GMV, booking, trung tâm, drill-down theo vùng</li><li><strong>Onboarding trung tâm & chuyên gia</strong> — Xác minh, badge chuẩn hóa</li><li><strong>Kiểm soát chất lượng mạng lưới</strong> — Rating &lt;3.5★ → auto action plan</li><li><strong>Phân quyền role-based chi tiết</strong> — Franchise / manager / staff / affiliate</li></ul></div></div>
+    <div class="fcard reveal reveal-delay-2"><div class="fcard-hdr"><div class="fcard-icon ic-o">🏪</div><div><div class="fcard-ttl">Nhượng Quyền Nền Tảng</div><div class="fcard-sub">SaaS franchise — white-label toàn quốc</div></div></div><div class="fcard-body"><ul class="flist"><li><strong>White-label platform cho franchise</strong> — Logo/màu riêng, powered by BYT-VietCare</li><li><strong>Gói nhượng quyền theo cấp</strong> — Basic/Pro/Enterprise, fee + % doanh thu</li><li><strong>Playbook & LMS đào tạo franchise</strong> — Onboarding kit chuẩn hóa đầy đủ</li><li><strong>Territorial management</strong> — Phân vùng độc quyền theo tỉnh/quận</li></ul></div></div>
+    <div class="fcard reveal reveal-delay-3"><div class="fcard-hdr"><div class="fcard-icon ic-b">🎓</div><div><div class="fcard-ttl">VietCare Academy</div><div class="fcard-sub">Trường đào tạo số — nguồn thu thứ 3</div></div></div><div class="fcard-body"><ul class="flist"><li><strong>LMS tích hợp — bán khóa học</strong> — VLTL, sức khỏe, quản lý trung tâm B2C + B2B</li><li><strong>Chứng chỉ "BYT-VietCare Certified"</strong> — Tạo tiêu chuẩn ngành có giá trị thực</li><li><strong>Webinar & masterclass định kỳ</strong> — Thought leadership, free/paid</li><li><strong>AI tạo & cập nhật nội dung</strong><span class="ai-chip">AI</span> — Tự động chuẩn hóa giáo trình</li></ul></div></div>
+  </div>
+</section>
+
+</div><!-- end stakeholders -->
+
+<div class="section-divider"></div>
+
+<!-- ══════════════ MEDIA CHANNELS ══════════════ -->
+<section class="section">
+  <div class="section-label reveal">Kênh Truyền Thông & Nội Dung</div>
+  <h2 class="sec-title reveal">Hệ Sinh Thái <em>Content & Media</em></h2>
+  <p class="sec-lead reveal">Đa kênh — đa định dạng — mỗi kênh phục vụ một mục tiêu cụ thể trong phễu tăng trưởng.</p>
+  <div class="channels-grid">
+    <div class="ch-card reveal reveal-delay-1"><div class="ch-icon">▶️</div><div class="ch-name">YouTube Channel</div><div class="ch-desc">Video dài: hướng dẫn bài tập, phỏng vấn chuyên gia, giải thích triệu chứng. SEO dài hạn mạnh nhất.</div><span class="ch-badge cb-free">Free Content</span></div>
+    <div class="ch-card reveal reveal-delay-2"><div class="ch-icon">🎵</div><div class="ch-name">TikTok / Reels</div><div class="ch-desc">Short video 15–60s: tips nhanh, bài tập tại chỗ làm, trending sức khỏe. Viral growth engine chính.</div><span class="ch-badge cb-live">Viral Growth</span></div>
+    <div class="ch-card reveal reveal-delay-3"><div class="ch-icon">📘</div><div class="ch-name">Facebook / Groups</div><div class="ch-desc">Cộng đồng chia sẻ, live stream workshop, targeting quảng cáo đến đúng tệp khách hàng.</div><span class="ch-badge cb-free">Community</span></div>
+    <div class="ch-card reveal reveal-delay-1"><div class="ch-icon">💬</div><div class="ch-name">Zalo OA & Mini App</div><div class="ch-desc">Kênh chính VN: nhắc lịch hẹn, gửi bài tập, cập nhật ưu đãi, tư vấn trực tiếp qua Zalo.</div><span class="ch-badge cb-live">Primary VN</span></div>
+    <div class="ch-card reveal reveal-delay-2"><div class="ch-icon">📸</div><div class="ch-name">Instagram / Pinterest</div><div class="ch-desc">Visual content: before/after, infographic sức khỏe, lifestyle wellness. Branding cao cấp.</div><span class="ch-badge cb-free">Brand Visual</span></div>
+    <div class="ch-card reveal reveal-delay-3"><div class="ch-icon">🎙️</div><div class="ch-name">Podcast / Spotify</div><div class="ch-desc">Nội dung chuyên sâu: phỏng vấn chuyên gia VLTL, kinh nghiệm bệnh nhân, xu hướng y tế.</div><span class="ch-badge cb-free">Thought Lead</span></div>
+    <div class="ch-card reveal reveal-delay-1"><div class="ch-icon">📧</div><div class="ch-name">Email & Push Notify</div><div class="ch-desc">Automation: onboarding, chăm sóc sau điều trị, upsell gói dịch vụ, birthday offers.</div><span class="ch-badge cb-paid">Retention</span></div>
+    <div class="ch-card reveal reveal-delay-2"><div class="ch-icon">🤖</div><div class="ch-name">AI Content Engine</div><div class="ch-desc">Tự động tạo caption, script video ngắn, bài viết blog — 10x tốc độ sản xuất nội dung.</div><span class="ch-badge cb-paid">AI-Powered</span></div>
+  </div>
+</section>
+
+<div class="section-divider"></div>
+
+<!-- ══════════════ AI SECTION ══════════════ -->
+<section class="section" id="ai-section">
+  <div class="section-label reveal">Intelligence Layer</div>
+  <h2 class="sec-title reveal">Kiến Trúc <em>AI Tích Hợp</em></h2>
+  <p class="sec-lead reveal">3 tầng AI biến BYT-VietCare từ app đặt lịch thành nền tảng thực sự thông minh.</p>
+  <div class="ai-layers">
+    <div class="ai-layer reveal reveal-delay-1"><div class="ai-layer-top"><div class="ai-num">// LAYER 01</div><h3>AI Cá Nhân Hóa</h3><div class="ai-layer-sub">Hiểu từng người dùng sâu nhất</div></div><ul class="ai-list"><li>Recommendation engine theo hồ sơ sức khỏe & lịch sử</li><li>Symptom checker → định hướng dịch vụ phù hợp</li><li>Cá nhân hóa bài tập tại nhà sau điều trị</li><li>Churn prediction + trigger retention tự động</li><li>Upsell intelligence — đúng thời điểm, đúng người</li></ul></div>
+    <div class="ai-layer reveal reveal-delay-2"><div class="ai-layer-top"><div class="ai-num">// LAYER 02</div><h3>AI Vận Hành</h3><div class="ai-layer-sub">Tự động hóa mọi tác vụ lặp lại</div></div><ul class="ai-list"><li>Smart scheduling — tối ưu lịch, giảm no-show</li><li>Inventory auto-reorder trước khi hết hàng</li><li>Revenue forecast 30-90 ngày cho trung tâm</li><li>Staff performance insights & đề xuất cải thiện</li><li>Automated follow-up kịch bản sau điều trị</li></ul></div>
+    <div class="ai-layer reveal reveal-delay-3"><div class="ai-layer-top"><div class="ai-num">// LAYER 03</div><h3>AI Hệ Sinh Thái</h3><div class="ai-layer-sub">Tăng trưởng mạng lưới thông minh</div></div><ul class="ai-list"><li>Demand mapping — phát hiện khu vực cần franchise</li><li>Fraud detection — review giả, booking ảo</li><li>Dynamic pricing recommendations theo cung-cầu</li><li>Content AI — tạo bài đăng social cho trung tâm</li><li>ML matching — đúng bệnh nhân, đúng chuyên gia</li></ul></div>
+  </div>
+</section>
+
+<!-- ══════════════ REVENUE ══════════════ -->
+<div class="rev-bg">
+  <div style="max-width:1280px;margin:0 auto;padding:0 60px">
+    <div class="section-label reveal">Mô Hình Doanh Thu</div>
+    <h2 class="sec-title reveal">6 Luồng <em>Doanh Thu Bền Vững</em></h2>
+    <p class="sec-lead reveal">Không phụ thuộc một nguồn — đa luồng tạo ra sự bền vững và tăng trưởng kép.</p>
+  </div>
+  <div class="rev-grid">
+    <div class="rev-card reveal reveal-delay-1"><div class="rev-line rl1"></div><div class="rev-icon">💳</div><h4>SaaS Subscription</h4><p>Phí thuê nền tảng hàng tháng từ trung tâm và cá nhân kinh doanh. Basic/Pro/Enterprise.</p><div class="rev-val">200K – 5M VNĐ / tháng</div></div>
+    <div class="rev-card reveal reveal-delay-2"><div class="rev-line rl2"></div><div class="rev-icon">🔁</div><h4>Transaction Commission</h4><p>Hoa hồng % trên mỗi booking thành công qua platform. Thấp hơn trung gian truyền thống.</p><div class="rev-val">5% – 15% / giao dịch</div></div>
+    <div class="rev-card reveal reveal-delay-3"><div class="rev-line rl3"></div><div class="rev-icon">🏪</div><h4>Franchise Fee</h4><p>Phí nhượng quyền nền tảng một lần + duy trì hàng năm. Revenue share từ mạng lưới.</p><div class="rev-val">50M – 500M VNĐ / franchise</div></div>
+    <div class="rev-card reveal reveal-delay-1"><div class="rev-line rl4"></div><div class="rev-icon">🛒</div><h4>Product Marketplace</h4><p>Phí nền tảng từ FOHOWAY và đối tác sản phẩm. % trên doanh số affiliate trong platform.</p><div class="rev-val">10% – 20% / GMV</div></div>
+    <div class="rev-card reveal reveal-delay-2"><div class="rev-line rl5"></div><div class="rev-icon">🎓</div><h4>Academy & Training</h4><p>Bán khóa học, chứng chỉ, masterclass qua VietCare Academy. B2C + B2B.</p><div class="rev-val">500K – 10M VNĐ / khóa</div></div>
+    <div class="rev-card reveal reveal-delay-3"><div class="rev-line rl6"></div><div class="rev-icon">📊</div><h4>Premium & Data</h4><p>Featured listing, quảng cáo đề xuất trong app, aggregate health insights ẩn danh.</p><div class="rev-val">Tiềm năng cao dài hạn</div></div>
+  </div>
+</div>
+
+<!-- ══════════════ PRODUCTS ══════════════ -->
+<section class="section" id="sanpham">
+  <div class="section-label reveal">Danh Mục Sản Phẩm</div>
+  <h2 class="sec-title reveal">Portfolio <em>Sản Phẩm & Dịch Vụ</em></h2>
+  <p class="sec-lead reveal">6 nhóm sản phẩm phục vụ toàn bộ hệ sinh thái — từ người dùng cuối đến doanh nghiệp nhượng quyền.</p>
+  <div class="products-grid">
+    <div class="pcard reveal reveal-delay-1"><div class="pcard-corner"></div><span class="pcard-icon">📱</span><h3>BYT-VietCare App</h3><div class="pcard-price">FREE + Premium features</div><p>App người dùng cuối iOS & Android. Booking, cộng đồng, hồ sơ sức khỏe, affiliate, content feed, tư vấn AI 24/7.</p><div class="pcard-tags"><span class="ptag">iOS</span><span class="ptag">Android</span><span class="ptag">Freemium</span><span class="ptag">Zalo Mini</span></div></div>
+    <div class="pcard reveal reveal-delay-2"><div class="pcard-corner"></div><span class="pcard-icon">🏥</span><h3>VietCare Business</h3><div class="pcard-price">SaaS B2B — từ 500K/tháng</div><p>Nền tảng quản lý toàn diện cho trung tâm: POS, EMR, HR, CRM, marketing, analytics — thay thế toàn bộ phần mềm quản lý cũ.</p><div class="pcard-tags"><span class="ptag">Web Dashboard</span><span class="ptag">Tablet POS</span><span class="ptag">SaaS</span></div></div>
+    <div class="pcard reveal reveal-delay-3"><div class="pcard-corner"></div><span class="pcard-icon">🏪</span><h3>VietCare Franchise</h3><div class="pcard-price">White-label — từ 50M VNĐ</div><p>Nhượng quyền nền tảng CARE MESH™ cho cá nhân muốn vận hành mạng lưới VLTL địa phương. Bao gồm platform, playbook, đào tạo, hỗ trợ triển khai.</p><div class="pcard-tags"><span class="ptag">White-label</span><span class="ptag">Territorial</span><span class="ptag">Full support</span></div></div>
+    <div class="pcard reveal reveal-delay-1"><div class="pcard-corner"></div><span class="pcard-icon">🎓</span><h3>VietCare Academy</h3><div class="pcard-price">B2C + B2B — 500K–10M/khóa</div><p>Trường đào tạo số: VLTL, sức khỏe, quản lý kinh doanh y tế. Chứng chỉ được công nhận toàn hệ sinh thái.</p><div class="pcard-tags"><span class="ptag">LMS</span><span class="ptag">Chứng chỉ</span><span class="ptag">Livestream</span></div></div>
+    <div class="pcard reveal reveal-delay-2"><div class="pcard-corner"></div><span class="pcard-icon">📺</span><h3>VietCare Media Hub</h3><div class="pcard-price">Content + Affiliate Revenue</div><p>YouTube, TikTok, Facebook, Zalo OA, Podcast chính thức — traffic organic khổng lồ, cộng đồng gắn kết, doanh thu quảng cáo + affiliate.</p><div class="pcard-tags"><span class="ptag">YouTube</span><span class="ptag">TikTok</span><span class="ptag">Podcast</span><span class="ptag">Zalo</span></div></div>
+    <div class="pcard reveal reveal-delay-3"><div class="pcard-corner"></div><span class="pcard-icon">🤝</span><h3>VietCare Partner Hub</h3><div class="pcard-price">Revenue share model</div><p>Nền tảng B2B cho công ty sản phẩm sức khỏe (FOHOWAY+). Quản lý affiliate network, doanh số, chính sách hoa hồng từ một portal.</p><div class="pcard-tags"><span class="ptag">FOHOWAY</span><span class="ptag">Multi-brand</span><span class="ptag">Affiliate</span></div></div>
+  </div>
+</section>
+
+<div class="section-divider"></div>
+
+<!-- ══════════════════════════════════════════════
+     PLATFORM ARCHITECTURE — INTERACTIVE SECTION
+══════════════════════════════════════════════ -->
+<div id="components-section">
+  <div class="comp-section-hdr">
+    <div class="section-label reveal" style="display:inline-flex">Platform Architecture</div>
+    <h2 class="reveal">16 <em>Platform Components</em></h2>
+    <p class="reveal">Nhấp vào bất kỳ thành phần để xem mô tả chi tiết, chức năng, tính năng cốt lõi, tech stack và KPIs.</p>
+    <div id="compCountBadge" class="comp-count-badge reveal">16 Components</div>
+  </div>
+
+  <div class="filter-bar">
+    <button class="ftab active" data-filter="all">Tất Cả</button>
+    <button class="ftab" data-filter="core" data-color="g">🟢 Core Engine</button>
+    <button class="ftab" data-filter="user" data-color="cy">🔵 Người Dùng</button>
+    <button class="ftab" data-filter="biz" data-color="gold">🟡 Kinh Doanh</button>
+    <button class="ftab" data-filter="ai" data-color="violet">🟣 AI & Data</button>
+    <button class="ftab" data-filter="ops" data-color="red">🔴 Vận Hành</button>
+  </div>
+
+  <div class="comp-grid" id="compGrid"></div>
+</div>
+
+<!-- DETAIL PANEL OVERLAY -->
+<div id="panel-overlay"></div>
+<div id="detail-panel">
+  <div class="panel-close">
+    <span class="panel-breadcrumb">BYT-VIETCARE · COMPONENT DETAIL</span>
+    <div class="panel-close-btn" id="closePanel">✕</div>
+  </div>
+  <div id="panel-content"></div>
+</div>
+
+<div class="section-divider" style="margin-top:0"></div>
+
+<!-- ══════════════ ROADMAP ══════════════ -->
+<section class="section" id="roadmap">
+  <div class="section-label reveal">Lộ Trình Triển Khai</div>
+  <h2 class="sec-title reveal">3 Giai Đoạn — <em>Từ 1 Đến Toàn Quốc</em></h2>
+  <div class="phases">
+    <div class="phase ph1 reveal reveal-delay-1"><div class="phase-glow"></div><div class="phase-num">1</div><div class="phase-badge">Tháng 1–6 · Foundation</div><h3>Xây Nền Tảng Lõi</h3><ul class="phase-items"><li>MVP App: booking, hồ sơ, thanh toán</li><li>Business Dashboard trung tâm đầu tiên</li><li>Tích hợp FOHOWAY vào hệ sinh thái</li><li>AI Chatbot tư vấn cơ bản 24/7</li><li>Zalo OA + TikTok + YouTube ra mắt</li><li>Loyalty KinePoints system</li><li>100 khách hàng đầu tiên, validate PMF</li></ul></div>
+    <div class="phase ph2 reveal reveal-delay-2"><div class="phase-glow"></div><div class="phase-num">2</div><div class="phase-badge">Tháng 7–18 · Growth</div><h3>Mở Rộng HN & HCM</h3><ul class="phase-items"><li>Onboard 20–50 trung tâm đối tác</li><li>Freelance therapist marketplace</li><li>VietCare Academy ra mắt</li><li>AI recommendation engine V1</li><li>B2B SaaS phiên bản đầy đủ</li><li>Franchise pilot 2–3 cơ sở</li><li>Media Hub: 100K+ subscribers</li></ul></div>
+    <div class="phase ph3 reveal reveal-delay-3"><div class="phase-glow"></div><div class="phase-num">3</div><div class="phase-badge">Năm 2–3 · Scale National</div><h3>CARE MESH™ Toàn Quốc</h3><ul class="phase-items"><li>Nhượng quyền 63 tỉnh/thành</li><li>200+ trung tâm trên platform</li><li>Telehealth & AI diagnosis nâng cao</li><li>Tích hợp bảo hiểm sức khỏe</li><li>IoT thiết bị y tế integration</li><li>SEA expansion roadmap</li><li>Series A fundraising readiness</li></ul></div>
+  </div>
+</section>
+
+<!-- VISION -->
+<div class="vision-stmt">
+  <h2 class="vs-quote">"BYT-VietCare không chỉ là một ứng dụng —<br>đây là <em>hạ tầng số</em> của ngành chăm sóc sức khỏe Việt Nam."</h2>
+  <p class="vs-sub">CARE MESH™ — mô hình kết nối đột phá do người Việt tạo ra, cho thị trường Việt Nam, với tầm nhìn toàn cầu.</p>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-logo">BYT-<span>VIET</span>CARE</div>
+  <div class="footer-slogan">Phục Hồi Toàn Diện — Kết Nối Vô Hạn — Sống Trọn Vẹn</div>
+  <div class="footer-mesh">◆ CARE MESH™ Platform · Powered by AI</div>
+  <div class="footer-note">Platform Strategy Blueprint · Confidential · 2025–2027</div>
+</footer>
+
+<!-- ══════════════════════════════════════════
+     JAVASCRIPT
+══════════════════════════════════════════ -->
+<script>
+/* ─── CURSOR ─── */
+const cursor=document.getElementById('cursor'),ring=document.getElementById('cursor-ring');
+let mx=window.innerWidth/2,my=window.innerHeight/2,rx=mx,ry=my;
+document.addEventListener('mousemove',e=>{mx=e.clientX;my=e.clientY;cursor.style.left=mx+'px';cursor.style.top=my+'px'});
+(function animRing(){rx+=(mx-rx)*.12;ry+=(my-ry)*.12;ring.style.left=rx+'px';ring.style.top=ry+'px';requestAnimationFrame(animRing)})();
+function cursorEnlarge(){cursor.style.transform='translate(-50%,-50%) scale(2.2)';ring.style.width='60px';ring.style.height='60px';ring.style.borderColor='rgba(0,200,150,.8)'}
+function cursorReset(){cursor.style.transform='translate(-50%,-50%) scale(1)';ring.style.width='36px';ring.style.height='36px';ring.style.borderColor='rgba(0,200,150,.5)'}
+document.querySelectorAll('a,button,.fcard,.rev-card,.pcard,.ch-card,.hcoin,.comp-card,.fn-item').forEach(el=>{el.addEventListener('mouseenter',cursorEnlarge);el.addEventListener('mouseleave',cursorReset)});
+
+/* ─── PARTICLE CANVAS ─── */
+const canvas=document.getElementById('canvas');
+const ctx=canvas.getContext('2d');
+let W,H,particles=[],mouse={x:9999,y:9999};
+function resize(){W=canvas.width=window.innerWidth;H=canvas.height=window.innerHeight}
+resize();window.addEventListener('resize',resize);
+document.addEventListener('mousemove',e=>{mouse.x=e.clientX;mouse.y=e.clientY});
+class Particle{
+  constructor(){this.reset()}
+  reset(){this.x=Math.random()*W;this.y=Math.random()*H;this.vx=(Math.random()-.5)*.35;this.vy=(Math.random()-.5)*.35;this.r=Math.random()*1.5+.4;this.a=Math.random()*.8+.2}
+  update(){
+    this.x+=this.vx;this.y+=this.vy;
+    if(this.x<0||this.x>W)this.vx*=-1;
+    if(this.y<0||this.y>H)this.vy*=-1;
+    const dx=this.x-mouse.x,dy=this.y-mouse.y,d=Math.sqrt(dx*dx+dy*dy);
+    if(d<100){this.vx+=dx/d*.018;this.vy+=dy/d*.018}
+  }
+  draw(){ctx.beginPath();ctx.arc(this.x,this.y,this.r,0,Math.PI*2);ctx.fillStyle=`rgba(0,200,150,${this.a*.55})`;ctx.fill()}
+}
+for(let i=0;i<80;i++)particles.push(new Particle());
+function drawLines(){
+  for(let i=0;i<particles.length;i++)
+    for(let j=i+1;j<particles.length;j++){
+      const dx=particles[i].x-particles[j].x,dy=particles[i].y-particles[j].y,d=Math.sqrt(dx*dx+dy*dy);
+      if(d<120){ctx.beginPath();ctx.moveTo(particles[i].x,particles[i].y);ctx.lineTo(particles[j].x,particles[j].y);ctx.strokeStyle=`rgba(0,200,150,${(1-d/120)*.18})`;ctx.lineWidth=.5;ctx.stroke()}
+    }
+}
+(function animate(){ctx.clearRect(0,0,W,H);particles.forEach(p=>{p.update();p.draw()});drawLines();requestAnimationFrame(animate)})();
+
+/* ─── COUNTER ─── */
+const counters=document.querySelectorAll('.counter');
+let counted=false;
+new IntersectionObserver(entries=>{
+  if(entries[0].isIntersecting&&!counted){
+    counted=true;
+    counters.forEach(c=>{
+      const target=+c.dataset.target;
+      let cur=0;const step=target/55;
+      const t=setInterval(()=>{cur+=step;if(cur>=target){cur=target;clearInterval(t)}c.textContent=Math.floor(cur)+(target>20?'M+':'+')},22);
+    });
+  }
+},{threshold:.5}).observe(document.querySelector('.hero-coins'));
+
+/* ─── SCROLL REVEAL ─── */
+new IntersectionObserver(entries=>{
+  entries.forEach(e=>{if(e.isIntersecting)e.target.classList.add('visible')});
+},{threshold:.1,rootMargin:'0px 0px -40px 0px'}).observe=((obs)=>{
+  document.querySelectorAll('.reveal').forEach(el=>obs.observe(el));return obs;
+})(new IntersectionObserver(entries=>{entries.forEach(e=>{if(e.isIntersecting)e.target.classList.add('visible')})},{threshold:.1,rootMargin:'0px 0px -40px 0px'}));
+
+/* ─── 3D TILT ─── */
+document.querySelectorAll('.fcard,.rev-card,.pcard').forEach(card=>{
+  card.addEventListener('mousemove',e=>{
+    const rect=card.getBoundingClientRect(),x=(e.clientX-rect.left)/rect.width-.5,y=(e.clientY-rect.top)/rect.height-.5;
+    card.style.transform=`translateY(-6px) rotateX(${-y*9}deg) rotateY(${x*9}deg) scale(1.01)`;
+  });
+  card.addEventListener('mouseleave',()=>{card.style.transition='transform .5s ease';card.style.transform='none'});
+  card.addEventListener('mouseenter',()=>{card.style.transition='none'});
+});
+
+/* ─── NAV SCROLL ─── */
+window.addEventListener('scroll',()=>{
+  document.getElementById('navbar').style.background=window.scrollY>60?'rgba(5,13,26,.95)':'rgba(5,13,26,.78)';
+  // active nav link
+  const sections=[{id:'top',a:0},{id:'stakeholders',a:0},{id:'ai-section',a:0},{id:'sanpham',a:0},{id:'components-section',a:0},{id:'roadmap',a:0}];
+  sections.forEach(s=>{const el=document.getElementById(s.id);if(el)s.a=el.getBoundingClientRect().top});
+  const links=document.querySelectorAll('.nav-links a');
+  links.forEach(l=>l.classList.remove('active'));
+  const hrefs=['#stakeholders','#ai-section','#sanpham','#components-section','#roadmap'];
+  hrefs.forEach((h,i)=>{
+    const el=document.querySelector(h);
+    if(el&&el.getBoundingClientRect().top<=120){links[i]&&links[i].classList.add('active')}
+  });
+});
+
+/* ─── GLITCH ─── */
+const brand=document.querySelector('.hero-brand');
+function glitch(){
+  brand.style.textShadow='2px 0 #00E5FF,-2px 0 #FF4757';
+  setTimeout(()=>{brand.style.textShadow='none';setTimeout(()=>{brand.style.textShadow='1px 0 #00C896';setTimeout(()=>{brand.style.textShadow='none'},50)},80)},60);
+  setTimeout(glitch,4000+Math.random()*3000);
+}
+setTimeout(glitch,3000);
+
+/* ══════════════════════════════════════
+   PLATFORM COMPONENTS DATA
+══════════════════════════════════════ */
+const components=[
+  {id:'booking',cat:'core',catLabel:'Core Engine',catColor:'#00C896',icon:'📅',name:'Booking & Scheduling Engine',tagline:'Hạt nhân điều phối thời gian — đưa đúng người đến đúng chỗ, đúng lúc',pills:['Real-time','Multi-resource','No-show AI'],glow:'rgba(0,200,150,.08)',status:'MVP Priority',desc:'Đây là trái tim hoạt động của toàn bộ nền tảng. Booking Engine không chỉ là lịch đặt hẹn — mà là hệ thống điều phối thông minh quản lý đồng thời thời gian của nhân viên, phòng trị liệu, thiết bị và nhu cầu của bệnh nhân.',functions:[{name:'Real-time Slot Management',desc:'Quản lý slot thời gian theo nhân viên, phòng, thiết bị — cập nhật tức thì, không bao giờ double-book',ai:false},{name:'Smart Auto-Match',desc:'AI khớp bệnh nhân với chuyên gia phù hợp nhất dựa trên triệu chứng, lịch sử điều trị, rating và vị trí',ai:true},{name:'Multi-channel Booking',desc:'Nhận booking từ App, Web, Zalo Mini App, hotline — tất cả hội tụ vào một calendar tập trung',ai:false},{name:'Recurring & Series Booking',desc:'Đặt lịch định kỳ hàng tuần/tháng, tự động gia hạn, gửi nhắc nhở trước 24h và 1h',ai:false},{name:'No-show Prediction & Prevention',desc:'AI dự đoán xác suất không đến theo hành vi lịch sử → gửi nhắc thêm, thu cọc tự động',ai:true},{name:'Waitlist Management',desc:'Khi hết slot, tự động thêm danh sách chờ và thông báo ngay khi có chỗ trống',ai:false}],features:['Drag & drop calendar view','Bulk schedule management','Buffer time tự động','Lịch nhân viên toàn TT','Xuất ra Google Calendar','Thống kê tỷ lệ lấp đầy','Blackout dates & holidays','Multi-timezone support'],roles:[{label:'Khách hàng',color:'#00C896'},{label:'Nhân viên',color:'#00E5FF'},{label:'Quản lý TT',color:'#FFB830'},{label:'Super Admin',color:'#9D7FFF'}],tech:['WebSocket','PostgreSQL','Redis Cache','Google Calendar API','Zalo OA API'],kpis:[{val:'<2s',lbl:'Thời gian xác nhận booking'},{val:'95%',lbl:'Tỷ lệ lấp đầy mục tiêu'},{val:'-40%',lbl:'Giảm no-show với AI'}],note:'Booking Engine tích hợp trực tiếp với Payment Gateway, EMR và Notification System — luồng dữ liệu liên tục không gián đoạn.'},
+  {id:'emr',cat:'core',catLabel:'Core Engine',catColor:'#00C896',icon:'📋',name:'EMR & Health Records',tagline:'Hồ sơ sức khỏe điện tử nhẹ — thiết kế riêng cho vật lý trị liệu Việt Nam',pills:['HIPAA-inspired','Offline-ready','Media Storage'],glow:'rgba(0,200,150,.08)',status:'MVP Priority',desc:'EMR của BYT-VietCare tối giản, dễ dùng trên tablet tại quầy, nhưng đủ mạnh để lưu trữ toàn bộ lịch sử điều trị, phác đồ và theo dõi tiến trình phục hồi — thiết kế đặc biệt cho ngành VLTL.',functions:[{name:'Hồ Sơ Bệnh Nhân Tập Trung',desc:'Lưu: thông tin cá nhân, tiền sử bệnh, dị ứng, chẩn đoán, phác đồ điều trị, ghi chú sau mỗi buổi',ai:false},{name:'SOAP Note Builder',desc:'Giao diện ghi chú theo chuẩn SOAP — tối ưu cho kỹ thuật viên ghi nhanh trong 2 phút',ai:false},{name:'Progress Tracking & Visualization',desc:'Biểu đồ phục hồi theo thời gian, thang điểm đau VAS, ROM measurement — bệnh nhân thấy tiến trình rõ ràng',ai:true},{name:'Treatment Protocol Library',desc:'Thư viện phác đồ điều trị chuẩn — AI đề xuất protocol dựa trên triệu chứng',ai:true},{name:'Media Documentation',desc:'Upload ảnh/video trước-sau điều trị, đính kèm phim X-quang/MRI — tổ chức theo timeline',ai:false},{name:'Home Exercise Prescription',desc:'Tạo và gửi bài tập tại nhà cá nhân hóa qua app — theo dõi tuân thủ, nhắc nhở thực hiện',ai:true}],features:['Timeline điều trị trực quan','Consent form số hóa','Chia sẻ hồ sơ giữa chi nhánh','Export PDF báo cáo','QR code check-in bệnh nhân','Offline mode (tablet)','Tìm kiếm hồ sơ tức thì','Audit trail đầy đủ'],roles:[{label:'Kỹ thuật viên',color:'#00C896'},{label:'Chuyên gia PT',color:'#00E5FF'},{label:'Quản lý TT',color:'#FFB830'}],tech:['PostgreSQL','AWS S3','PDF.js','IndexedDB (offline)','OCR API'],kpis:[{val:'3 min',lbl:'Ghi chú SOAP trung bình'},{val:'100%',lbl:'Dữ liệu mã hóa AES-256'},{val:'∞',lbl:'Dung lượng lưu trữ ảnh'}],note:'Dữ liệu EMR được mã hóa hoàn toàn, không chia sẻ với bên thứ ba. Bệnh nhân có quyền xem và tải hồ sơ bất kỳ lúc nào.'},
+  {id:'payment',cat:'core',catLabel:'Core Engine',catColor:'#00C896',icon:'💳',name:'CareWallet & Payment Gateway',tagline:'Hệ thống thanh toán đa phương thức — từ MoMo đến hoa hồng affiliate',pills:['Multi-payment','Split Revenue','Escrow'],glow:'rgba(0,200,150,.08)',status:'MVP Priority',desc:'CareWallet là trung tâm tài chính của BYT-VietCare — tự động chia doanh thu cho tất cả các bên liên quan trong một giao dịch. Thiết kế phù hợp thị trường VN: tiền mặt + ví điện tử + ngân hàng.',functions:[{name:'Multi-payment Integration',desc:'Tích hợp MoMo, ZaloPay, VNPay, ngân hàng, thẻ tín dụng, tiền mặt tại quầy — 1 API layer thống nhất',ai:false},{name:'Automated Revenue Split',desc:'Mỗi giao dịch tự động chia % cho platform, trung tâm, kỹ thuật viên, affiliate — theo cấu hình từng dịch vụ',ai:false},{name:'CareWallet — Ví Nội Bộ',desc:'Nạp tiền trước nhận ưu đãi, hoàn tiền khi huỷ, tích điểm KinePoints — số dư real-time',ai:false},{name:'Subscription & Package Billing',desc:'Combo 10 buổi, gói tháng tự gia hạn — tự động trừ buổi khi check-in, cảnh báo sắp hết',ai:false},{name:'Affiliate Commission Engine',desc:'Tính toán và phân phối hoa hồng affiliate (FOHOWAY, đối tác) theo cấu trúc đa tầng',ai:false},{name:'Financial Reporting',desc:'Báo cáo doanh thu ngày/tháng/năm, xuất CSV/PDF cho kế toán, hóa đơn điện tử',ai:false}],features:['Refund tự động khi huỷ','Deposit/đặt cọc linh hoạt','Dynamic pricing giờ cao điểm','Group payment (chia hóa đơn)','Hóa đơn điện tử tích hợp','Fraud detection realtime','Limit chi tiêu cá nhân','Báo cáo thuế VAT tự động'],roles:[{label:'Khách hàng',color:'#00C896'},{label:'Trung tâm',color:'#FFB830'},{label:'Affiliate',color:'#9D7FFF'},{label:'Finance Admin',color:'#FF4757'}],tech:['Stripe','MoMo API','ZaloPay SDK','VNPay','Node.js Webhooks'],kpis:[{val:'<3s',lbl:'Thời gian xử lý thanh toán'},{val:'99.9%',lbl:'Uptime payment gateway'},{val:'0%',lbl:'Phí ẩn cho người dùng'}],note:'CareWallet hoạt động như tài khoản prepaid nội bộ. Tuân thủ quy định Ngân hàng Nhà nước Việt Nam về thanh toán trung gian.'},
+  {id:'ai-engine',cat:'ai',catLabel:'AI & Data',catColor:'#9D7FFF',icon:'🧠',name:'AI Intelligence Engine',tagline:'Lớp trí tuệ nhân tạo xuyên suốt — biến dữ liệu thành quyết định tức thì',pills:['ML/NLP','Recommendation','Predictive'],glow:'rgba(157,127,255,.08)',status:'Phase 1 Core',desc:'AI Engine là "bộ não" của BYT-VietCare — lớp xử lý thông minh chạy nền toàn bộ platform. Từ gợi ý dịch vụ, dự đoán no-show, đến phát hiện gian lận và tối ưu lịch làm việc — AI Engine học liên tục.',functions:[{name:'Symptom-to-Service Matching',desc:'NLP tiếng Việt tự nhiên → phân loại và gợi ý dịch vụ VLTL phù hợp nhất với độ chính xác >85%',ai:true},{name:'Personalization Engine',desc:'User profile đa chiều → cá nhân hóa feed, gợi ý dịch vụ, bài tập và sản phẩm',ai:true},{name:'Predictive Analytics',desc:'Dự báo doanh thu 30-90 ngày, dự đoán khách sắp rời bỏ, phát hiện xu hướng nhu cầu',ai:true},{name:'Fraud & Anomaly Detection',desc:'Phát hiện review giả, booking ảo, gian lận affiliate — cảnh báo real-time cho admin',ai:true},{name:'Content Generation AI',desc:'Tự động tạo caption social, bài tập phục hồi cá nhân hóa, báo cáo tiến trình bệnh nhân',ai:true},{name:'Dynamic Pricing Intelligence',desc:'Phân tích cung-cầu → gợi ý giá tối ưu để tăng doanh thu mà không mất cạnh tranh',ai:true}],features:['Tiếng Việt NLP tùy chỉnh','A/B testing tự động','Model versioning','Explainable AI','Federated learning','API cho third-party','Retraining tự động','Bias detection & fairness'],roles:[{label:'Data Scientist',color:'#9D7FFF'},{label:'Platform Admin',color:'#FF4757'},{label:'Tất cả users (nền)',color:'#00C896'}],tech:['Python/FastAPI','TensorFlow','OpenAI API','Langchain','Redis ML Cache','Pinecone Vector DB'],kpis:[{val:'85%+',lbl:'Độ chính xác symptom match'},{val:'+35%',lbl:'Tăng doanh thu AI pricing'},{val:'<100ms',lbl:'Latency inference'}],note:'AI Engine xử lý dữ liệu anonymized hoàn toàn. Mọi quyết định AI đều có thể được giải thích và overrule bởi con người.'},
+  {id:'notification',cat:'core',catLabel:'Core Engine',catColor:'#00C896',icon:'🔔',name:'Communication & Notification Hub',tagline:'Đúng tin nhắn, đúng người, đúng lúc — trên mọi kênh khách hàng Việt dùng',pills:['Omnichannel','Automation','Zalo First'],glow:'rgba(0,200,150,.08)',status:'MVP Priority',desc:'Communication Hub xây dựng với triết lý "Vietnam-first": Zalo OA là kênh ưu tiên số 1, tích hợp đầy đủ với tất cả luồng thông báo từ booking, thanh toán, đến chăm sóc sau điều trị.',functions:[{name:'Zalo OA Integration',desc:'Gửi thông báo đặt lịch, nhắc hẹn, xác nhận thanh toán qua Zalo OA — tỷ lệ đọc >80% vs email <20%',ai:false},{name:'Automated Notification Flows',desc:'Kịch bản tự động: nhắc lịch 24h/1h, welcome mới, cảm ơn sau buổi, nhắc tái khám, birthday offer',ai:false},{name:'In-app Chat System',desc:'Chat bệnh nhân ↔ kỹ thuật viên, bệnh nhân ↔ AI chatbot — lịch sử hội thoại lưu vĩnh viễn',ai:false},{name:'AI Chatbot 24/7',desc:'Chatbot tiếng Việt tự nhiên: trả lời câu hỏi, hướng dẫn triệu chứng, book lịch — escalate khi cần',ai:true},{name:'Broadcast & Campaign',desc:'Gửi tin marketing theo phân khúc, A/B testing tự động — targeting chính xác theo hành vi',ai:true},{name:'Cross-channel Unified Inbox',desc:'Zalo + app + web + SMS hội tụ 1 inbox duy nhất — nhân viên trả lời từ 1 giao diện',ai:false}],features:['Push notification iOS/Android','SMS failover khi Zalo lỗi','Rich media messages','Scheduled sending','Do-not-disturb hours','Delivery tracking','Unsubscribe management','Multi-language VI/EN/CN'],roles:[{label:'Khách hàng',color:'#00C896'},{label:'Kỹ thuật viên',color:'#00E5FF'},{label:'Marketing Manager',color:'#FFB830'}],tech:['Zalo OA API','Firebase FCM','Twilio SMS','WebSocket','SendGrid'],kpis:[{val:'82%',lbl:'Open rate Zalo (vs 20% email)'},{val:'-35%',lbl:'Giảm no-show với nhắc lịch'},{val:'<2s',lbl:'Delivery time notification'}],note:'Tuân thủ quy định về spam và quyền riêng tư. Người dùng có thể opt-out từng kênh cụ thể.'},
+  {id:'crm',cat:'biz',catLabel:'Kinh Doanh',catColor:'#FFB830',icon:'👥',name:'CRM & Customer Intelligence',tagline:'Hiểu từng khách hàng sâu hơn bất kỳ nhân viên nào — và nhớ mãi',pills:['360° Profile','Segmentation','Lifecycle'],glow:'rgba(255,184,48,.06)',status:'Phase 1',desc:'CRM không chỉ lưu tên và số điện thoại — đây là hệ thống intelligence toàn diện về mỗi khách: lịch sử điều trị, hành vi mua hàng, điểm loyalty, dự đoán nhu cầu và giá trị lifetime.',functions:[{name:'360° Customer Profile',desc:'Tổng hợp: thông tin cơ bản, hồ sơ sức khỏe, lịch sử booking, mua hàng, loyalty, affiliate level',ai:false},{name:'Smart Segmentation',desc:'Tự động phân nhóm: VIP, thường xuyên, rủi ro rời bỏ, mới, tiềm năng upsell — real-time',ai:true},{name:'Customer Lifetime Value',desc:'Tính toán và dự báo CLV — ưu tiên tài nguyên chăm sóc cho nhóm cao nhất',ai:true},{name:'Retention Campaign Automation',desc:'30 ngày chưa quay lại → tự động gửi ưu đãi. Sắp hết gói → nhắc gia hạn sớm',ai:true},{name:'Referral Tracking',desc:'Theo dõi ai giới thiệu ai, tính hoa hồng, xác định "super referrers" để activate affiliate',ai:false},{name:'Feedback & NPS System',desc:'Thu thập đánh giá sau mỗi buổi, tính NPS, phân tích sentiment tiếng Việt',ai:true}],features:['Timeline khách hàng đầy đủ','Ghi chú nội bộ nhân viên','Tag và label tùy chỉnh','Import/export CSV','GDPR-ready deletion','Duplicate detection','Activity log','API sync CRM ngoài'],roles:[{label:'Receptionist',color:'#00C896'},{label:'Marketing Manager',color:'#FFB830'},{label:'Giám đốc TT',color:'#FF4757'}],tech:['PostgreSQL','Elasticsearch','Segment.io','Mixpanel','Node.js'],kpis:[{val:'+28%',lbl:'Tăng retention rate'},{val:'3x',lbl:'ROI từ segmentation campaign'},{val:'360°',lbl:'Data points per customer'}],note:'Dữ liệu khách hàng là tài sản của trung tâm — BYT-VietCare không bán hay chia sẻ với bên thứ ba.'},
+  {id:'marketplace',cat:'biz',catLabel:'Kinh Doanh',catColor:'#FFB830',icon:'🛒',name:'Marketplace & E-commerce',tagline:'Cửa hàng sức khỏe số — từ sản phẩm vật lý đến dịch vụ số hóa',pills:['Multi-vendor','Affiliate','Physical+Digital'],glow:'rgba(255,184,48,.06)',status:'Phase 1',desc:'Marketplace kết hợp 2 loại: (1) Sản phẩm vật lý từ FOHOWAY và đối tác; (2) Dịch vụ số — gói buổi điều trị, khóa học online, tư vấn video. Tích hợp sâu hệ thống affiliate đa tầng.',functions:[{name:'Product Catalog Management',desc:'Quản lý danh mục đa vendor: FOHOWAY và đối tác — mỗi vendor trang riêng, kho riêng',ai:false},{name:'Affiliate Purchase System',desc:'Khách đăng ký affiliate FOHOWAY trong app, mua ưu đãi và hưởng thu nhập multi-level',ai:false},{name:'AI Product Recommendation',desc:'Gợi ý sản phẩm dựa trên hồ sơ sức khỏe và lịch sử điều trị',ai:true},{name:'Order & Fulfillment',desc:'Quản lý đơn hàng: xác nhận, chuẩn bị, vận chuyển (GHTK/GHN), theo dõi real-time',ai:false},{name:'Digital Product Delivery',desc:'Gói dịch vụ, khóa học, bài tập video — giao ngay sau thanh toán, quản lý quyền truy cập',ai:false},{name:'Promotions & Bundle Engine',desc:'Flash sale, bundle deals, voucher, tích điểm x2 — campaign theo sự kiện',ai:false}],features:['Multi-currency VNĐ','Review sản phẩm xác thực','Wishlist & so sánh','Subscription product','Return & refund policy','Inventory alert','Bulk order B2B','API vendor management'],roles:[{label:'Khách hàng',color:'#00C896'},{label:'Affiliate Member',color:'#9D7FFF'},{label:'Vendor Partner',color:'#FFB830'},{label:'Marketplace Admin',color:'#FF4757'}],tech:['Medusa.js','PostgreSQL','Stripe','GHTK API','GHN API','AWS S3'],kpis:[{val:'15%',lbl:'Marketplace take rate'},{val:'+45%',lbl:'Basket size với AI recommend'},{val:'2 min',lbl:'Onboard vendor mới'}],note:'Sản phẩm affiliate hiển thị rõ là affiliate. Chính sách bảo vệ người tiêu dùng theo luật TMĐT Việt Nam.'},
+  {id:'mobile-app',cat:'user',catLabel:'Người Dùng',catColor:'#00E5FF',icon:'📱',name:'Mobile App — Người Dùng',tagline:'Cổng vào hệ sinh thái BYT-VietCare — nhẹ, nhanh, bản địa hóa hoàn toàn',pills:['iOS + Android','Offline','Zalo Mini'],glow:'rgba(0,229,255,.06)',status:'MVP Priority',desc:'App di động là điểm chạm chính của khách hàng. Thiết kế mobile-first, nhẹ (<50MB), offline-capable và tối ưu cho người dùng Việt Nam. Bên cạnh app native, có Zalo Mini App cho 74 triệu người dùng Zalo.',functions:[{name:'Home Feed Cá Nhân Hóa',desc:'Feed thông minh: lịch hẹn sắp tới, gợi ý dịch vụ, bài viết cộng đồng, sản phẩm phù hợp',ai:true},{name:'Search & Discovery',desc:'Tìm theo triệu chứng, dịch vụ, trung tâm gần nhất, chuyên gia — kết hợp bản đồ GPS',ai:false},{name:'Health Profile & Tracking',desc:'Quản lý hồ sơ sức khỏe, xem lịch sử điều trị, theo dõi biểu đồ phục hồi',ai:false},{name:'Community & Content',desc:'Feed bài viết chuyên gia, video bài tập, hỏi đáp cộng đồng — chia sẻ và review',ai:false},{name:'Affiliate Dashboard',desc:'Theo dõi thu nhập affiliate, downline network, hoa hồng pending/đã nhận',ai:false},{name:'Loyalty & Rewards',desc:'Xem KinePoints, đổi điểm lấy ưu đãi, cấp bậc thành viên, nhiệm vụ kiếm điểm',ai:false}],features:['Dark mode','Fingerprint/FaceID','Multi-language VI/EN','Deep links','Share to Zalo/Facebook','Offline booking view','Widget iOS/Android','App clip iOS'],roles:[{label:'Bệnh nhân/Khách hàng',color:'#00C896'},{label:'Affiliate Member',color:'#9D7FFF'}],tech:['React Native','Expo','Redux Toolkit','React Navigation','Mapbox','Firebase'],kpis:[{val:'<50MB',lbl:'Kích thước app'},{val:'4.5★',lbl:'Mục tiêu App Store rating'},{val:'<3s',lbl:'Cold start time'}],note:'App miễn phí hoàn toàn giai đoạn đầu — tính năng Premium sau khi đạt 10,000 MAU.'},
+  {id:'biz-dashboard',cat:'biz',catLabel:'Kinh Doanh',catColor:'#FFB830',icon:'🖥️',name:'Business Dashboard — Trung Tâm',tagline:'Văn phòng số toàn diện — quản lý mọi thứ từ 1 màn hình tablet',pills:['POS','HR','Analytics','CRM'],glow:'rgba(255,184,48,.06)',status:'MVP Priority',desc:'Command center dành riêng cho trung tâm VLTL. Tối ưu cho tablet tại quầy lễ tân, laptop quản lý và điện thoại kỹ thuật viên. Thay thế: sổ sách giấy, Excel, phần mềm cũ — đào tạo nhân viên trong 30 phút.',functions:[{name:'Calendar & Schedule View',desc:'Xem lịch ngày/tuần/tháng, theo nhân viên hoặc phòng — drag & drop, tỷ lệ lấp đầy màu sắc',ai:false},{name:'POS & Checkout',desc:'Thanh toán tại quầy: chọn dịch vụ, áp voucher, chọn phương thức, in hóa đơn — <60 giây',ai:false},{name:'Staff Management',desc:'Hồ sơ, ca làm việc, chấm công GPS, tính lương tự động (cơ bản + hoa hồng + KPI)',ai:false},{name:'Real-time Revenue Dashboard',desc:'Doanh thu hôm nay/tuần/tháng, so sánh cùng kỳ, top dịch vụ/nhân viên — auto refresh',ai:true},{name:'Inventory Management',desc:'Vật tư tiêu hao: cảnh báo sắp hết, đặt hàng nhập trực tiếp qua platform',ai:false},{name:'Marketing Tools',desc:'Tạo voucher, flash sale, campaign Zalo/SMS, xem hiệu quả chiến dịch — không cần agency',ai:false}],features:['Multi-staff access','Permission theo role','Dark/Light mode','Mobile responsive','Export Excel/PDF','Multi-branch view','Audit log','API webhook'],roles:[{label:'Giám đốc/Chủ TT',color:'#FF4757'},{label:'Quản lý ca',color:'#FFB830'},{label:'Lễ tân',color:'#00C896'},{label:'Kỹ thuật viên',color:'#00E5FF'}],tech:['React.js','Chart.js','WebSocket','PostgreSQL','Electron desktop'],kpis:[{val:'30 min',lbl:'Đào tạo nhân viên mới'},{val:'80%',lbl:'Giảm thời gian admin thủ công'},{val:'24/7',lbl:'Uptime dashboard'}],note:'Offline mode: mất mạng vẫn check-in, ghi chú EMR, thanh toán tiền mặt được. Đồng bộ khi có mạng trở lại.'},
+  {id:'analytics',cat:'ai',catLabel:'AI & Data',catColor:'#9D7FFF',icon:'📊',name:'Analytics & Business Intelligence',tagline:'Biến số liệu thành chiến lược — nhìn thấy những gì đối thủ không thấy',pills:['BI Dashboard','Predictive','Market Intel'],glow:'rgba(157,127,255,.08)',status:'Phase 1',desc:'Analytics là lớp intelligence giúp mọi stakeholder ra quyết định dựa trên dữ liệu thay vì cảm tính. Từ chủ trung tâm muốn biết dịch vụ sinh lời nhất, đến Super Admin muốn biết khu vực nào cần franchise.',functions:[{name:'Multi-level Analytics Dashboard',desc:'4 dashboard riêng: khách hàng (tiến trình), trung tâm (vận hành+tài chính), franchise, platform',ai:false},{name:'Revenue & Profitability Analysis',desc:'Margin theo dịch vụ, chi phí vận hành, điểm hòa vốn — drill-down đến từng nhân viên, phòng',ai:true},{name:'Customer Behavior Analytics',desc:'Funnel conversion, cohort analysis, session recordings ẩn danh',ai:true},{name:'Market Demand Mapping',desc:'Bản đồ nhiệt nhu cầu VLTL theo địa lý — phát hiện khu vực thiếu supply',ai:true},{name:'Staff Performance Scorecard',desc:'Đánh giá đa chiều: doanh thu, rating, tỷ lệ giữ chân khách, tốc độ phục hồi',ai:true},{name:'Competitor Intelligence',desc:'Theo dõi giá thị trường, dịch vụ đối thủ, xu hướng tìm kiếm Google khu vực',ai:true}],features:['Custom report builder','Scheduled email reports','Alert khi KPI lệch ngưỡng','Data export CSV/API','Benchmark vs industry','Historical data 5 năm','Real-time vs batch','White-label report franchise'],roles:[{label:'Chủ trung tâm',color:'#FFB830'},{label:'Franchise Owner',color:'#9D7FFF'},{label:'Platform Admin',color:'#FF4757'},{label:'Data Analyst',color:'#00C896'}],tech:['Apache Superset','ClickHouse','dbt','Python Pandas','Grafana','Metabase'],kpis:[{val:'<5s',lbl:'Load dashboard phức tạp'},{val:'90 ngày',lbl:'Lookback mặc định'},{val:'100+',lbl:'Metrics được theo dõi'}],note:'Analytics data ẩn danh hóa trước khi đưa vào AI. Trung tâm chỉ thấy dữ liệu của mình.'},
+  {id:'franchise',cat:'ops',catLabel:'Vận Hành',catColor:'#FF4757',icon:'🏪',name:'Franchise Management System',tagline:'Nhân bản CARE MESH™ ra toàn quốc — từ 1 trung tâm đến 500+',pills:['White-label','Territory','Compliance'],glow:'rgba(255,71,87,.06)',status:'Phase 2',desc:'Hệ thống cho phép BYT-VietCare nhân bản ra toàn quốc theo SaaS B2B. Mỗi franchise owner nhận white-label platform với logo/màu riêng, nhưng chạy CARE MESH™ infrastructure — chất lượng đồng nhất toàn mạng.',functions:[{name:'Franchise Onboarding Workflow',desc:'Duyệt franchise: nộp hồ sơ → thẩm định → ký HĐ → cấp platform → đào tạo → go-live — tự động 70%',ai:false},{name:'Territory Management',desc:'Phân vùng độc quyền theo tỉnh/quận trên bản đồ — không cạnh tranh trực tiếp cùng vùng',ai:false},{name:'White-label Configuration',desc:'Tùy chỉnh: logo, tên, màu sắc, domain riêng — backend chia sẻ infrastructure',ai:false},{name:'Royalty & Fee Tracking',desc:'Tự động tính phí royalty hàng tháng (% GMV), subscription, đào tạo — thu tiền tự động',ai:false},{name:'Quality Control Network',desc:'Monitoring chất lượng toàn mạng: <3.5★ liên tục → auto trigger action plan',ai:true},{name:'Playbook & SOP Library',desc:'Thư viện tài liệu vận hành chuẩn (SOP): setup phòng, đào tạo nhân viên, xử lý khiếu nại',ai:false}],features:['Franchise performance ranking','Cross-franchise referral','Shared marketing materials','Group purchasing power','Network event management','Franchisee forum','Legal document templates','Expansion planning tools'],roles:[{label:'Platform HQ',color:'#FF4757'},{label:'Franchise Owner',color:'#9D7FFF'},{label:'Regional Manager',color:'#FFB830'}],tech:['Multi-tenant Architecture','Subdomain routing','Stripe Connect','DocuSign API','Mapbox Territory'],kpis:[{val:'30 ngày',lbl:'Từ ký HĐ đến go-live'},{val:'15%',lbl:'Royalty rate từ GMV'},{val:'63',lbl:'Tỉnh thành mục tiêu Phase 3'}],note:'Franchise không phải MLM — franchise owner là chủ doanh nghiệp độc lập. Doanh thu từ dịch vụ thực tế, không từ recruit.'},
+  {id:'affiliate',cat:'biz',catLabel:'Kinh Doanh',catColor:'#FFB830',icon:'🔗',name:'Partner & Affiliate Hub',tagline:'Hệ sinh thái đối tác — FOHOWAY là đầu tiên trong hành trình dài',pills:['Multi-brand','MLM-lite','Real-time'],glow:'rgba(255,184,48,.06)',status:'MVP Priority',desc:'Partner Hub quản lý quan hệ với công ty đối tác (FOHOWAY+) và mạng lưới affiliate. Minh bạch, dễ hiểu, quản lý trong một nền tảng thay vì Excel và Zalo group.',functions:[{name:'Partner Company Portal',desc:'FOHOWAY và đối tác: portal riêng — doanh số, thành viên, chính sách hoa hồng, upload sản phẩm',ai:false},{name:'Affiliate Member Onboarding',desc:'Khách đăng ký affiliate trong app: chọn công ty, đọc chính sách, xác thực, nhận link/mã giới thiệu',ai:false},{name:'Commission Engine',desc:'Tính hoa hồng đa tầng linh hoạt: direct, override từ downline, bonus pool — mỗi công ty cấu hình riêng',ai:false},{name:'Real-time Earnings Dashboard',desc:'Thành viên xem: doanh số, hoa hồng pending/đã nhận, cấu trúc network, rank hiện tại',ai:false},{name:'Compliance & Policy Management',desc:'Đảm bảo tuân thủ chính sách: không spam, không misleading — cảnh báo và khóa vi phạm',ai:true},{name:'Multi-company Wallet',desc:'Affiliate nhiều công ty quản lý tất cả thu nhập trong 1 CareWallet — rút tiền 1 lần',ai:false}],features:['Deep link tracking','Cookie tracking 30 ngày','Attribution multi-touch','Leaderboard gamification','Monthly payout automation','Tax reporting thu nhập','Partner SLA monitoring','Webhook cho partner'],roles:[{label:'Khách hàng/Affiliate',color:'#9D7FFF'},{label:'Công ty đối tác',color:'#FFB830'},{label:'Platform Admin',color:'#FF4757'}],tech:['Impact.com','Custom tracking pixel','PostgreSQL','Node.js','Webhooks'],kpis:[{val:'T+7',lbl:'Chu kỳ thanh toán hoa hồng'},{val:'100%',lbl:'Tracking accuracy mục tiêu'},{val:'∞',lbl:'Số công ty đối tác mở rộng'}],note:'BYT-VietCare là nền tảng trung gian — không chịu trách nhiệm về sản phẩm/chính sách của công ty đối tác.'},
+  {id:'academy',cat:'user',catLabel:'Người Dùng',catColor:'#00E5FF',icon:'🎓',name:'VietCare Academy — LMS',tagline:'Trường đào tạo số — định nghĩa lại chuẩn chuyên môn ngành VLTL Việt Nam',pills:['LMS','Certification','B2C + B2B'],glow:'rgba(0,229,255,.06)',status:'Phase 2',desc:'Academy tạo ra chuẩn mực cho ngành — khi đủ kỹ thuật viên có chứng chỉ "BYT-VietCare Certified", bệnh nhân sẽ chủ động tìm badge này. Academy cũng là nguồn doanh thu B2B khi bán gói đào tạo cho chuỗi.',functions:[{name:'Course Builder & LMS',desc:'Tạo khóa học từ video, slide, PDF, quiz, bài tập thực hành — live stream kết hợp recorded',ai:false},{name:'Certification Engine',desc:'Cấp chứng chỉ sau hoàn thành khóa và đạt điểm kiểm tra — chứng chỉ số QR code xác thực',ai:false},{name:'Personalized Learning Path',desc:'AI đề xuất lộ trình học theo cấp độ, mục tiêu nghề nghiệp, thời gian sẵn có',ai:true},{name:'Live Class Management',desc:'Webinar, workshop trực tuyến: đăng ký, nhắc nhở, livestream, Q&A, replay',ai:false},{name:'Corporate Training Portal',desc:'Trung tâm mua gói đào tạo cho toàn nhân viên: track tiến độ, assign khóa học, báo cáo',ai:false},{name:'Expert Content Marketplace',desc:'Chuyên gia đăng bán khóa học của mình — BYT-VietCare thu phí platform, giảng viên nhận 70%',ai:false}],features:['Subtitles tự động AI','Offline download bài học','Spaced repetition flashcards','Peer discussion forum','Progress certificate','Group enrollment','SCORM compatible','API cho bên thứ 3'],roles:[{label:'Học viên cá nhân',color:'#00E5FF'},{label:'Kỹ thuật viên',color:'#00C896'},{label:'Chuyên gia giảng dạy',color:'#FFB830'},{label:'HR Trung tâm',color:'#FF4757'}],tech:['Moodle customized','Vimeo API','Zoom SDK','AWS CloudFront','PDF.js'],kpis:[{val:'500K',lbl:'Giá khóa học entry-level'},{val:'70%',lbl:'Revenue share cho instructor'},{val:'CE hours',lbl:'Chứng chỉ tính điểm tiếp tục học'}],note:'Chứng chỉ bổ sung cho bằng cấp chính thức từ Bộ Y tế — không thay thế. Có giá trị trong toàn hệ sinh thái BYT-VietCare.'},
+  {id:'media-hub',cat:'user',catLabel:'Người Dùng',catColor:'#00E5FF',icon:'📺',name:'Media Hub & Content Engine',tagline:'Kênh truyền thông đa nền tảng — xây cộng đồng sức khỏe lớn nhất Việt Nam',pills:['YouTube','TikTok','Podcast','Zalo'],glow:'rgba(0,229,255,.06)',status:'Phase 1 — Parallel',desc:'Media Hub là công cụ tăng trưởng organic dài hạn — xây thương hiệu, thu hút người dùng mới, tạo cộng đồng gắn kết. Nội dung nuôi dưỡng phễu: xem → tải app → book lịch → thành viên trung thành.',functions:[{name:'YouTube Channel Strategy',desc:'Video dài: series bài tập theo bệnh lý, phỏng vấn chuyên gia, giải thích triệu chứng — SEO organic',ai:false},{name:'TikTok / Reels Growth Engine',desc:'Short video: tips 60s, challenge sức khỏe, trước/sau điều trị, trending sounds + nội dung y tế',ai:true},{name:'Zalo OA & Mini App',desc:'Fanpage Zalo 1M+ followers mục tiêu, broadcast sức khỏe hàng ngày, booking qua Zalo',ai:false},{name:'Podcast Production',desc:'"Khỏe Mỗi Ngày" hàng tuần: chuyên gia, bệnh nhân thực tế — phân phối Spotify/Apple Podcast',ai:false},{name:'AI Content Generator',desc:'Tự động tạo caption, script video 60s, bài viết blog từ keyword — nhân viên review & publish',ai:true},{name:'Creator Program',desc:'Kỹ thuật viên trong mạng lưới tạo nội dung dưới banner BYT-VietCare — trả phí theo view/conversion',ai:false}],features:['Content calendar tập trung','Cross-post tự động đa kênh','Analytics mỗi kênh','UTM tracking đến conversion','Brand asset library','Comment moderation AI','Thumbnail A/B testing','Collab với KOL/KOC'],roles:[{label:'Content Manager',color:'#00E5FF'},{label:'Kỹ thuật viên Creator',color:'#00C896'},{label:'Marketing Lead',color:'#FFB830'}],tech:['YouTube API','TikTok API','Zalo OA API','Spotify Podcast','Canva API','OpenAI GPT-4'],kpis:[{val:'100K',lbl:'YouTube subscribers mục tiêu năm 1'},{val:'500K',lbl:'TikTok followers mục tiêu'},{val:'1M',lbl:'Zalo OA followers mục tiêu'}],note:'Nội dung y tế phải được review bởi chuyên gia có chứng chỉ trước khi publish. Tuân thủ quy định quảng cáo y tế Bộ Y tế VN.'},
+  {id:'super-admin',cat:'ops',catLabel:'Vận Hành',catColor:'#FF4757',icon:'🎛️',name:'Super Admin & Control Center',tagline:'Buồng lái của BYT-VietCare — điều phối toàn bộ hệ sinh thái từ một giao diện',pills:['God Mode','Multi-tenant','Audit'],glow:'rgba(255,71,87,.06)',status:'Internal Tool',desc:'Control Center là công cụ dành riêng cho team BYT-VietCare HQ — giao diện "God Mode" để quản lý toàn bộ platform: onboard trung tâm, kiểm soát chất lượng, cấu hình hệ thống, xử lý tranh chấp.',functions:[{name:'Network Health Monitoring',desc:'Dashboard real-time: tổng GMV, số booking/ngày, uptime services, alert khi bất thường',ai:true},{name:'Onboarding & Verification',desc:'Duyệt trung tâm/chuyên gia mới: xác minh giấy phép, photo upload, cấp badge, setup tài khoản',ai:false},{name:'Quality Enforcement',desc:'<3.5★ liên tục → auto: cảnh báo → hỗ trợ → cải thiện → treo tài khoản nếu không cải thiện',ai:true},{name:'Dispute Resolution',desc:'Xử lý tranh chấp giữa khách hàng và trung tâm: timeline, bằng chứng, phán quyết, hoàn tiền',ai:false},{name:'Platform Configuration',desc:'Cấu hình toàn hệ: phí giao dịch, chính sách hoàn tiền, giới hạn giá, cấu hình AI — không cần code',ai:false},{name:'Financial Reconciliation',desc:'Đối soát tài chính toàn platform: xác nhận revenue split, xử lý chargeback, báo cáo nhà đầu tư',ai:false}],features:['Role-based access HQ only','Impersonation debug','Feature flags','A/B test manager','API rate limit control','Maintenance mode','Database query tool','Export toàn bộ data'],roles:[{label:'CTO / Tech Lead',color:'#FF4757'},{label:'Operations Manager',color:'#FFB830'},{label:'Finance Controller',color:'#00C896'}],tech:['AdminJS','PostgreSQL Admin','Grafana','Sentry','LaunchDarkly'],kpis:[{val:'99.9%',lbl:'Target platform uptime'},{val:'<4h',lbl:'Xử lý dispute trung bình'},{val:'1 ngày',lbl:'Onboard trung tâm mới'}],note:'Truy cập yêu cầu 2FA bắt buộc + IP whitelist. Mọi action đều được log — không có gì không traceable.'},
+  {id:'auth',cat:'ops',catLabel:'Vận Hành',catColor:'#FF4757',icon:'🔐',name:'Auth, Security & Compliance',tagline:'Nền móng bảo mật — bảo vệ 97 triệu người dùng tiềm năng từ ngày đầu tiên',pills:['Zero-trust','PDPD Compliant','2FA'],glow:'rgba(255,71,87,.06)',status:'MVP Foundational',desc:'Security là nền móng, không phải tính năng bổ sung. Dữ liệu sức khỏe là loại nhạy cảm nhất. BYT-VietCare áp dụng kiến trúc zero-trust và mã hóa end-to-end từ ngày đầu tiên.',functions:[{name:'Multi-method Authentication',desc:'Email+password, SĐT OTP, Google/Facebook/Zalo social login, biometric FaceID/Fingerprint — 2FA option',ai:false},{name:'Role-based Access Control',desc:'Phân quyền chi tiết: khách hàng, nhân viên, quản lý, franchise owner, admin — mỗi role thấy đúng phần việc',ai:false},{name:'Data Encryption',desc:'AES-256 lưu trữ, TLS 1.3 truyền tải, mã hóa đặc biệt dữ liệu y tế — không ai đọc được raw data',ai:false},{name:'Fraud Detection & Prevention',desc:'Monitoring real-time: login địa điểm lạ, thay đổi bank, gian lận affiliate — block tự động',ai:true},{name:'PDPD Compliance',desc:'Tuân thủ Nghị định 13/2023 VN: consent management, right to deletion, data portability, breach notification',ai:false},{name:'Audit Trail & Logging',desc:'Mọi action của mọi user được log đầy đủ: ai/làm gì/lúc nào/từ IP nào — immutable 7 năm',ai:false}],features:['Session management đa thiết bị','Device fingerprinting','API key rotation tự động','Penetration testing định kỳ','Bug bounty program','DDoS protection','WAF Application Firewall','SOC 2 Type II roadmap'],roles:[{label:'Security Engineer',color:'#FF4757'},{label:'Tất cả users (nền)',color:'#00C896'},{label:'Compliance Officer',color:'#FFB830'}],tech:['Auth0 / Keycloak','JWT + Refresh tokens','HashiCorp Vault','Cloudflare WAF','AWS GuardDuty'],kpis:[{val:'0',lbl:'Data breaches mục tiêu'},{val:'PDPD',lbl:'Tuân thủ pháp luật VN'},{val:'<200ms',lbl:'Auth response time'}],note:'Cam kết không bán dữ liệu người dùng dưới bất kỳ hình thức nào. Tiêu chuẩn bảo mật cao hơn yêu cầu luật VN hiện tại.'}
+];
+
+/* ── RENDER COMPONENT CARDS ── */
+const catColorMap={core:'rgba(0,200,150,.1)',user:'rgba(0,229,255,.08)',biz:'rgba(255,184,48,.08)',ai:'rgba(157,127,255,.1)',ops:'rgba(255,71,87,.08)'};
+const catBorderMap={core:'rgba(0,200,150,.5)',user:'rgba(0,229,255,.4)',biz:'rgba(255,184,48,.4)',ai:'rgba(157,127,255,.45)',ops:'rgba(255,71,87,.4)'};
+const grid=document.getElementById('compGrid');
+
+components.forEach((c,i)=>{
+  const card=document.createElement('div');
+  card.className='comp-card';card.dataset.id=c.id;card.dataset.cat=c.cat;
+  card.style.setProperty('--card-glow',c.glow);
+  card.style.animationDelay=(i*.04)+'s';
+  card.innerHTML=`
+    <div class="card-top">
+      <div class="card-icon-wrap" style="background:${catColorMap[c.cat]}">${c.icon}</div>
+      <span class="cat-tag" style="background:${catColorMap[c.cat]};color:${c.catColor};border:1px solid ${catBorderMap[c.cat]}">${c.catLabel}</span>
+    </div>
+    <div class="comp-name">${c.name}</div>
+    <div class="comp-tagline">${c.tagline}</div>
+    <div class="comp-pills">${c.pills.map(p=>`<span class="pill">${p}</span>`).join('')}</div>
+    <div class="card-arrow">→</div>`;
+  card.addEventListener('click',()=>openPanel(c.id));
+  card.addEventListener('mouseenter',cursorEnlarge);
+  card.addEventListener('mouseleave',cursorReset);
+  grid.appendChild(card);
+});
+
+/* ── FILTER ── */
+document.querySelectorAll('.ftab').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    document.querySelectorAll('.ftab').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    const f=btn.dataset.filter;
+    let vis=0;
+    document.querySelectorAll('.comp-card').forEach(c=>{
+      const show=f==='all'||c.dataset.cat===f;
+      c.classList.toggle('hidden',!show);
+      if(show)vis++;
+    });
+    document.getElementById('compCountBadge').textContent=vis+' Components';
+  });
+});
+
+/* ── PANEL ── */
+const overlay=document.getElementById('panel-overlay');
+const panel=document.getElementById('detail-panel');
+const pcontent=document.getElementById('panel-content');
+let currentComp=null;
+
+function openPanel(id){
+  const c=components.find(x=>x.id===id);if(!c)return;
+  if(currentComp)document.querySelector(`.comp-card[data-id="${currentComp}"]`)?.classList.remove('active-card');
+  currentComp=id;
+  document.querySelector(`.comp-card[data-id="${id}"]`)?.classList.add('active-card');
+  const cc=catColorMap[c.cat],cb=catBorderMap[c.cat];
+  pcontent.innerHTML=`
+    <div class="panel-hero">
+      <span class="panel-icon-big">${c.icon}</span>
+      <div class="panel-cat-row">
+        <span class="panel-cat" style="background:${cc};color:${c.catColor};border:1px solid ${cb}">${c.catLabel}</span>
+        <span class="panel-status">${c.status}</span>
+      </div>
+      <div class="panel-name">${c.name}</div>
+      <div class="panel-tagline">${c.tagline}</div>
+    </div>
+    <div class="panel-desc">${c.desc}</div>
+    <div class="ps"><div class="ps-title">Chức Năng Chính</div><ul class="fn-list">${c.functions.map((f,i)=>`<li class="fn-item"><div class="fn-num">${String(i+1).padStart(2,'0')}</div><div class="fn-body"><strong>${f.name}${f.ai?'<span class="ai-tag">AI</span>':''}</strong><span>${f.desc}</span></div></li>`).join('')}</ul></div>
+    <div class="ps"><div class="ps-title">Tính Năng Chi Tiết</div><div class="feat-grid">${c.features.map(f=>`<div class="feat-item">${f}</div>`).join('')}</div></div>
+    <div class="ps"><div class="ps-title">Người Dùng / Roles</div><div class="roles-row">${c.roles.map(r=>`<div class="role-chip"><div class="rdot" style="background:${r.color}"></div>${r.label}</div>`).join('')}</div></div>
+    <div class="ps"><div class="ps-title">Tech Stack</div><div class="tech-row">${c.tech.map(t=>`<span class="tech-badge">${t}</span>`).join('')}</div></div>
+    <div class="ps"><div class="ps-title">KPIs & Mục Tiêu</div><div class="kpi-row">${c.kpis.map(k=>`<div class="kpi-box"><span class="kpi-val">${k.val}</span><div class="kpi-lbl">${k.lbl}</div></div>`).join('')}</div></div>
+    <div class="panel-bottom"><div class="pb-note">💡 <strong>Lưu ý:</strong> ${c.note}</div><div class="panel-kbd"><span class="kbd">←</span><span style="font-size:10px;color:var(--muted)">điều hướng</span><span class="kbd">→</span><span style="font-size:10px;color:var(--muted)">·</span><span class="kbd">ESC</span><span style="font-size:10px;color:var(--muted)">đóng</span></div></div>`;
+  overlay.classList.add('show');
+  requestAnimationFrame(()=>panel.classList.add('open'));
+  panel.scrollTop=0;
+  document.body.style.overflow='hidden';
+  // add listeners for fn-items in panel
+  pcontent.querySelectorAll('.fn-item').forEach(el=>{el.addEventListener('mouseenter',cursorEnlarge);el.addEventListener('mouseleave',cursorReset)});
+}
+
+function closePanel(){
+  panel.classList.remove('open');
+  overlay.classList.remove('show');
+  document.body.style.overflow='';
+  if(currentComp){document.querySelector(`.comp-card[data-id="${currentComp}"]`)?.classList.remove('active-card');currentComp=null}
+}
+document.getElementById('closePanel').addEventListener('click',closePanel);
+overlay.addEventListener('click',closePanel);
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape'){closePanel();return}
+  if(!currentComp)return;
+  const idx=components.findIndex(c=>c.id===currentComp);
+  if(e.key==='ArrowRight'&&idx<components.length-1)openPanel(components[idx+1].id);
+  if(e.key==='ArrowLeft'&&idx>0)openPanel(components[idx-1].id);
+});
+</script>
+</body>
+</html>
